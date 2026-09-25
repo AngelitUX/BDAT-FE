@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="92px" preserveAspectRatio="none" style="width:401px;height:92px;background:#000000;" version="1.1" viewBox="0 0 401 92" width="401px" zoomAndPan="magnify"><defs/><g><rect fill="#0D061B" height="1" style="stroke: #0D061B; stroke-width: 1.0;" width="1" x="0" y="0"/><rect fill="#33FF02" height="21.2969" style="stroke: #33FF02; stroke-width: 1.0;" width="395" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="393" x="6" y="20">[From 02_secuencia_crear_ejecutar.puml (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.2969"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="394" x="5" y="56.5938">@startuml Secuencia_Crear_y_Ejecutar_Simulacion</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="98" x="5" y="72.8906">!theme plain</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="106" x="10" y="89.1875">Syntax Error?</text><!--MD5=[3ab3faa1dfd3410ce272996ed9c6499a]
+@startuml Secuencia_Crear_y_Ejecutar_Simulacion
+!theme plain
+
+title Diagrama de Secuencia del Sistema (DSS)\nCrear y Ejecutar Simulación
+
+actor "Investigador" as User
+participant "Frontend\n(React)" as Frontend
+participant "Backend\n(Flask)" as Backend
+participant "GMSH" as GMSH
+participant "FEniCS" as FEniCS
+participant "WebSocket" as WS
+database "Base de\nDatos" as DB
+
+== Crear Simulación ==
+
+User -> Frontend : Click "New Simulation"
+activate Frontend
+
+User -> Frontend : Ingresa parámetros\n(geometría, sensores, material)
+
+User -> Frontend : Click "Create"
+
+Frontend -> Backend : POST /simulations\n{parámetros}
+activate Backend
+
+Backend -> Backend : ValidarDatos()
+
+Backend -> DB : INSERT simulation
+activate DB
+DB - -> Backend : simulation_id
+deactivate DB
+
+Backend -> WS : emit("nueva_simulacion")
+activate WS
+WS - -> Frontend : Notificación
+deactivate WS
+
+Backend - -> Frontend : 200 OK\n{simulation_id}
+
+Backend -> GMSH : Generar Malla\n(async task)
+activate GMSH
+
+GMSH -> GMSH : Crear geometría
+GMSH -> GMSH : Refinar malla
+GMSH -> GMSH : Guardar XML/MSH
+
+GMSH - -> Backend : Archivos generados
+deactivate GMSH
+
+Backend -> DB : UPDATE\nxml_file, msh_file\nstatus="Not started"
+activate DB
+DB - -> Backend : OK
+deactivate DB
+
+Backend -> WS : emit("mesh_ready")
+activate WS
+WS - -> Frontend : Notificación
+deactivate WS
+
+Frontend -> Frontend : Actualizar lista
+deactivate Frontend
+
+== Ejecutar Simulación ==
+
+User -> Frontend : Click "Execute"
+activate Frontend
+
+Frontend -> Backend : PUT /simulations/{id}/run
+activate Backend
+
+Backend -> Backend : Encolar()
+
+Backend -> DB : UPDATE status="Queued"
+activate DB
+DB - -> Backend : OK
+deactivate DB
+
+Backend -> WS : emit("estado_simulacion")\nstatus="Queued"
+activate WS
+WS - -> Frontend : Notificación
+deactivate WS
+
+Backend - -> Frontend : 200 OK
+
+Backend -> Backend : Procesar Cola
+
+Backend -> DB : UPDATE status="Running"
+activate DB
+DB - -> Backend : OK
+deactivate DB
+
+Backend -> WS : emit("estado_simulacion")\nstatus="Running"
+activate WS
+WS - -> Frontend : Notificación
+deactivate WS
+
+Backend -> FEniCS : Ejecutar simulación\n(parámetros)
+activate FEniCS
+
+FEniCS -> FEniCS : Cargar malla XML
+FEniCS -> FEniCS : Configurar FEniCS\n(function spaces, BC)
+FEniCS -> FEniCS : Newmark β-γ\n(iteración temporal)
+FEniCS -> FEniCS : Resolver ecuaciones\nelastodinámicas
+FEniCS -> FEniCS : Evaluar sensores\n(sol_sensors_y, _z)
+FEniCS -> FEniCS : Generar archivo .mat
+
+FEniCS - -> Backend : Resultados.mat
+deactivate FEniCS
+
+Backend -> DB : UPDATE\nfile_data (BLOB)\nstatus="Finished"\nend_datetime
+activate DB
+DB - -> Backend : OK
+deactivate DB
+
+Backend -> WS : emit("estado_simulacion")\nstatus="Finished"
+activate WS
+WS - -> Frontend : Notificación
+Frontend -> Frontend : Reproducir sonido 🔔
+deactivate WS
+
+deactivate Backend
+
+Frontend -> Frontend : Actualizar UI
+User <- - Frontend : Visualiza "Finished"
+deactivate Frontend
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 07:22:07 CLST 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.8+9-Ubuntu-0ubuntu124.04.1
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

@@ -1,0 +1,152 @@
+# ========================================
+# BDATProject - archivos generados y locales
+# ========================================
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Herramientas de desarrollo / conocimiento local
+.codebase-memory/
+.codex/
+.idea/
+.vscode/
+
+# Dependencias JavaScript
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ========================================
+# FRONTEND (React/Node.js)
+# ========================================
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Builds, cachés y cobertura
+frontend/build/
+frontend/dist/
+frontend/.cache/
+frontend/coverage/
+coverage/
+
+# Archivos temporales de desarrollo
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.eslintcache
+
+# Simulation output files
+backend/src/features/simulations/meshes/
+**/meshes/
+*.vtu
+*.pvd
+
+
+# Git key
+.gitkey
+
+# ========================================
+# BACKEND (Python)
+# ========================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Cachés de herramientas Python
+.pytest_cache/
+**/.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Logs y archivos temporales
+*.log
+*.tmp
+*.temp
+*.bak
+
+# Distribution / packaging
+backend/build/
+backend/dist/
+backend/*.egg-info/
+
+# Unit test / coverage reports
+backend/.coverage
+/informe/
+
+# Environments
+backend/.env
+backend/.venv
+backend/venv/
+backend/env/
+
+# Bases de datos y datos locales
+*.db
+*.sqlite
+*.sqlite3
+backend/data/
+backend/Results/
+backend/results/
+backend/simulation_results/
+backend/temp_signals/
+simulation_results/
+
+# Resultados y archivos de malla generados por simulaciones
+**/meshes/
+**/simulation_results/
+**/Results/
+**/results/
+*.msh
+*.xml
+*.vtu
+*.pvd
+*.xdmf
+*.h5
+*.mat
+*.hdf5
+
+# Preservar archivos .mat de referencia necesarios para el funcionamiento
+!**/REF2D_exvivo_Mathilde_Radius_01mm.mat
+!**/k_REF2D_Datapy.mat
+
+# ========================================
+# CYPRESS E2E TESTING
+# ========================================
+# Cypress files and directories
+cypress/
+cypress.config.js
+docker-compose.cypress.yml
+Dockerfile.cypress
+run-cypress-tests.sh
+/cypress-results/
+/frontend/cypress/
+frontend/cypress-setup-sh
+frontend/cypress-config-ci.js
+frontend/cypress-config.js
+frontend/Dockefile.cypress
+run-cypress-tests.sh
+docker-compose.cypress-yml
+
+
+# ========================================
+# IDE & EDITORS
+# ========================================
+# Claves y archivos sensibles
+GITKEY
+*.key
+*.pem
+*.p12
+
+# Electron/build artifacts from local experiments
+dist/

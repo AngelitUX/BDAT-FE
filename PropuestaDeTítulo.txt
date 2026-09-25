@@ -1,0 +1,368 @@
+UNIVERSIDAD DE VALPARA´ISO
+Facultad de Ingenier´ıa
+Escuela de Ingenier´ıa Inform´atica
+Validaci´on Param´etrica y Optimizaci´on de la
+Plataforma Web BDAT para la Simulaci´on de
+Ondas Ultras´onicas en Hueso Cortical
+Propuesta de Trabajo de T´ıtulo
+´Angel Gabriel Pino C´ardenas
+angel.pino@estudiantes.uv.cl
+2 de septiembre de 2026
+Profesor Gu´ıa: Jean-Gabriel Minonzio
+Resumen
+Las fracturas por fragilidad, asociadas a patolog´ıas como la osteoporosis, re-
+presentan un desaf´ıo cr´ıtico de salud p´ublica. Actualmente, el est´andar cl´ınico
+para su diagn´ostico es la densitometr´ıa ´osea (DXA); sin embargo, esta t´ecnica
+mide ´unicamente la masa mineral, omitiendo la calidad y microarquitectura
+del tejido. Como alternativa biomec´anica, el ultrasonido cuantitativo mediante
+Transmisi´on Axial Bidireccional (BDAT, por sus siglas en ingl´es Bi-directional
+Axial Transmission) permite evaluar la rigidez cortical. Para comprender la
+compleja interacci´on de estas ondas en el hueso, el uso de simulaciones num´eri-
+cas es fundamental.
+El presente trabajo de t´ıtulo tiene como objetivo principal validar, optimi-
+zar y estructurar para su difusi´on la plataforma web hom´onima BDAT (Bone
+Guided Wave Analysis Tool ). A diferencia de las soluciones basadas en Dife-
+rencias Finitas (FDTD), BDAT emplea el M´etodo de Elementos Finitos (FE)
+mediante el motor FEniCS, permitiendo un modelado superior de geometr´ıas
+complejas. La metodolog´ıa contempla establecer una configuraci´on base num´eri-
+camente convergente para realizar un an´alisis param´etrico variando la rugosidad
+superficial —roughness—, el ´angulo de incidencia y la atenuaci´on del medio.
+Finalmente, se extraer´an m´etricas enfocadas en la coherencia del espectro de
+las ondas guiadas y se consolidar´a la arquitectura del software mediante un
+stack basado en React, Flask y Docker, garantizando la usabilidad, el correcto
+despliegue y la futura adopci´on de la herramienta por la comunidad cient´ıfica.
+´Indice
+1. Introducci´on 3
+2. Definici´on del Problema 4
+3. Soluci´on Propuesta 5
+4. Objetivos 6
+4.1. Objetivo General . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+4.2. Objetivos Espec´ıficos . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+5. Metodolog´ıa 7
+6. Planificaci´on y Cronograma 9
+7. Recursos 11
+7.1. Recursos de Hardware . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+7.2. Recursos de Software e Infraestructura Tecnol´ogica . . . . . . . . . . 11
+7.3. Recursos Humanos . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+7.4. Recursos Financieros . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+Referencias 13
+2
+1. Introducci´on
+Las fracturas por fragilidad ´osea representan un problema de salud p´ublica de
+alto impacto, fuertemente asociado a patolog´ıas silenciosas como la osteoporosis. El
+diagn´ostico cl´ınico est´andar se basa en la densitometr´ıa de rayos X de energ´ıa dual
+(DXA); sin embargo, esta t´ecnica se limita a cuantificar la masa mineral ´osea, omi-
+tiendo determinantes biomec´anicos fundamentales como la microarquitectura y la
+integridad estructural del tejido. Frente a esta limitaci´on, las t´ecnicas de Ultrasonido
+Cuantitativo (QUS), espec´ıficamente los arreglos de Transmisi´on Axial Bidireccional
+(BDAT, por sus siglas en ingl´es Bi-directional Axial Transmission), se han consolida-
+do como una alternativa no invasiva con el potencial de interrogar directamente las
+propiedades mec´anicas de la corteza ´osea mediante el an´alisis de la propagaci´on de
+ondas guiadas.
+Para comprender y predecir la compleja cinem´atica de estas ondas ultras´onicas al
+interactuar con el tejido, el uso de simuladores num´ericos es imprescindible. Hist´ori-
+camente, la investigaci´on en este campo ha dependido de herramientas basadas en
+Diferencias Finitas en el Dominio del Tiempo (FDTD), como SimSonic. No obstante,
+para modelar con precisi´on las caracter´ısticas topogr´aficas reales del hueso —tales
+como la amplitud de su rugosidad superficial (roughness)— el M´etodo de Elementos
+Finitos (FE) resulta superior al permitir una discretizaci´on geom´etrica exacta. Bajo
+este paradigma surge la plataforma web cient´ıfica hom´onima BDAT (Bone Guided
+Wave Analysis Tool ), dise˜nada para facilitar la ejecuci´on y visualizaci´on de simula-
+ciones de ondas guiadas en hueso cortical, cuyo n´ucleo integra un motor de resoluci´on
+num´erica basado en FEniCS.
+A pesar de su robusta arquitectura basada en microservicios —React, Flask y
+Docker—, el simulador BDAT se encuentra en una etapa donde requiere un riguroso
+proceso de validaci´on metodol´ogica y computacional. Para que la herramienta genere
+m´etricas confiables —como la coherencia del espectro de ondas guiadas— es necesario
+definir una configuraci´on base num´ericamente estable y evaluar el comportamiento del
+solver frente a la variaci´on sistem´atica de par´ametros cr´ıticos, tales como el ´angulo de
+incidencia de los transductores, el coeficiente de atenuaci´on y la rugosidad superficial
+del medio.
+En consecuencia, el presente trabajo de t´ıtulo propone llevar a cabo el an´alisis
+de sensibilidad y la validaci´on param´etrica de la plataforma BDAT. El prop´osito es
+doble: por un lado, confirmar la exactitud f´ısica de los resultados simulados frente a
+variaciones anat´omicas y experimentales; y por otro, desde el ´ambito de la Ingenier´ıa
+Civil Inform´atica, optimizar la experiencia de usuario y el despliegue del sistema. De
+este modo, se busca garantizar que la plataforma ofrezca un funcionamiento correcto,
+acertado y accesible para el usuario final, prepar´andola estructuralmente para su
+futura difusi´on y adopci´on por parte de la comunidad cient´ıfica e investigadora.
+3
+2. Definici´on del Problema
+El diagn´ostico cl´ınico de la fragilidad ´osea depende predominantemente de la den-
+sitometr´ıa ´osea (DXA), una t´ecnica que, si bien es el est´andar actual, presenta la
+limitante de evaluar ´unicamente la densidad mineral, sin aportar informaci´on sobre
+la microarquitectura ni la integridad biomec´anica del hueso. Para superar esta ba-
+rrera, la t´ecnica de ultrasonido de Transmisi´on Axial Bidireccional (BDAT, por sus
+siglas en ingl´es Bi-directional Axial Transmission) se perfila como una soluci´on pro-
+metedora, ya que la propagaci´on de ondas guiadas a lo largo de la corteza ´osea est´a
+directamente influenciada por las propiedades mec´anicas y estructurales del tejido.
+Sin embargo, la interpretaci´on de estas se˜nales es un proceso f´ısicamente complejo
+que requiere del apoyo de simulaciones num´ericas precisas.
+Hist´oricamente, la simulaci´on de estas ondas se ha realizado mediante software
+basado en Diferencias Finitas en el Dominio del Tiempo (FDTD), como SimSonic.
+El problema de este enfoque es su dificultad para modelar con precisi´on contornos
+geom´etricos irregulares, como la rugosidad superficial natural del hueso (roughness),
+lo que introduce errores en la simulaci´on de la dispersi´on de la onda. Como respuesta
+a esto, se ha desarrollado la plataforma web hom´onima BDAT (Bone Guided Wave
+Analysis Tool ), orientada a utilizar el M´etodo de Elementos Finitos (FE) mediante
+el motor FEniCS para modelar estas variaciones geom´etricas con alta fidelidad.
+No obstante, el simulador BDAT enfrenta actualmente un desaf´ıo cr´ıtico de vali-
+daci´on y estandarizaci´on. A la fecha, no existe una configuraci´on base computacio-
+nalmente definida que garantice resultados num´ericamente convergentes y eficientes
+—por ejemplo, el establecimiento de tama˜nos de malla o m´argenes de simulaci´on
+´optimos—. Asimismo, se desconoce el grado de sensibilidad y la respuesta exacta
+del solver num´erico ante la variaci´on de par´ametros clave de inter´es cl´ınico y expe-
+rimental, tales como el ´angulo de incidencia de los transductores, el coeficiente de
+atenuaci´on y la amplitud de la rugosidad superficial. Sin un an´alisis sistem´atico que
+vincule la variaci´on de estos par´ametros con las m´etricas de salida del sistema —
+espec´ıficamente la coherencia del espectro de las ondas guiadas—, los resultados de
+la plataforma carecen de respaldo metodol´ogico para su uso formal.
+Adicionalmente, desde la perspectiva de la Ingenier´ıa de Software, las herramien-
+tas de computaci´on cient´ıfica suelen presentar una alta barrera de entrada t´ecnica.
+Aunque BDAT cuenta con una arquitectura moderna basada en React, Flask y Doc-
+ker, es imperativo asegurar que el simulador posea un funcionamiento correcto, un
+despliegue sin fricciones y una interfaz de usuario verdaderamente intuitiva.
+En s´ıntesis, el problema radica en la ausencia de una validaci´on param´etrica sis-
+tem´atica de la plataforma BDAT y en la necesidad de consolidar su arquitectura
+de software, limitando actualmente su capacidad para generar m´etricas espectrales
+confiables y dificultando su adopci´on y difusi´on entre la comunidad cient´ıfica y cl´ınica.
+4
+3. Soluci´on Propuesta
+Para abordar los desaf´ıos de validaci´on param´etrica y accesibilidad t´ecnica del
+simulador de ondas ultras´onicas, se propone la ejecuci´on de un plan de trabajo meto-
+dol´ogico estructurado sobre la plataforma web BDAT (Bone Guided Wave Analysis
+Tool ). La soluci´on aprovecha el motor de Elementos Finitos (FE) integrado en el sis-
+tema para superar las limitaciones geom´etricas de los modelos tradicionales FDTD,
+permitiendo una representaci´on fiel de la microarquitectura ´osea.
+La propuesta se articula en las siguientes fases de desarrollo y validaci´on:
+Definici´on de la Configuraci´on Base: Se establecer´a un conjunto de par´ame-
+tros estructurales y num´ericos fijos que actuar´an como el est´andar de control del
+simulador. Esto incluye la determinaci´on emp´ırica de m´argenes de simulaci´on
+´optimos para evitar reflexiones espurias, y la calibraci´on del tama˜no de malla
+(mesh size) para asegurar la convergencia num´erica. El objetivo es encontrar
+el punto de equilibrio exacto entre la m´as alta precisi´on en la resoluci´on de la
+longitud de onda y un costo computacional viable en tiempo.
+An´alisis de Sensibilidad Param´etrica: Sobre la configuraci´on base validada,
+se dise˜nar´a e implementar´a una matriz de simulaciones combinadas. Se aislar´an
+y modificar´an sistem´aticamente tres par´ametros fundamentales de inter´es cl´ınico
+y experimental: la amplitud de la rugosidad superficial (roughness), el ´angulo
+de incidencia de los transductores y el coeficiente de atenuaci´on.
+Evaluaci´on de M´etricas de Salida: Las se˜nales espacio-temporales resultan-
+tes de la matriz de simulaciones ser´an procesadas y transformadas para extraer
+las curvas de dispersi´on de las ondas guiadas. Mediante el uso de herramientas
+de procesamiento externo —contemplando MATLAB o sus alternativas direc-
+tas de c´odigo abierto como GNU Octave o librer´ıas cient´ıficas en Python—,
+se evaluar´a la m´etrica de “coherencia del espectro”, cuantificando matem´atica-
+mente c´omo la rugosidad y el ´angulo de incidencia degradan o alteran la se˜nal
+ultras´onica, validando as´ı la exactitud f´ısica del motor num´erico.
+Optimizaci´on de la Arquitectura y Difusi´on Cient´ıfica: Desde el ´ambito
+de la Ingenier´ıa Civil Inform´atica, la soluci´on contempla la consolidaci´on del
+stack tecnol´ogico subyacente de la plataforma BDAT, el cual integra React,
+Flask y Docker. Se implementar´an mejoras orientadas a la experiencia de usua-
+rio (UX), el manejo as´ıncrono de procesos y la robustez del empaquetado en
+contenedores. Esto garantizar´a que la herramienta final no solo sea num´erica-
+mente precisa, sino que posea una curva de aprendizaje baja, posibilitando su
+correcta difusi´on, mantenimiento y uso intuitivo por parte de la comunidad
+cient´ıfica e investigadora interesada en la salud ´osea.
+5
+4. Objetivos
+4.1. Objetivo General
+Validar computacionalmente y consolidar la arquitectura y el despliegue de la
+plataforma web BDAT para la simulaci´on de ondas ultras´onicas en hueso cor-
+tical, estableciendo un marco de an´alisis param´etrico y optimizando su infraes-
+tructura de software para su futura difusi´on cient´ıfica.
+4.2. Objetivos Espec´ıficos
+1. Definir una configuraci´on base de simulaci´on estableciendo los par´ametros
+geom´etricos y num´ericos ´optimos, integrando una comparaci´on de rendimiento
+y precisi´on entre distintos tama˜nos de malla (0,05mm vs. 0,10mm).
+2. Ejecutar un an´alisis de sensibilidad param´etrica evaluando el compor-
+tamiento de las ondas guiadas frente a la variaci´on sistem´atica de la rugosidad
+superficial (roughness), el ´angulo de incidencia del transductor y la atenuaci´on
+del medio.
+3. Evaluar las m´etricas de salida del simulador procesando las se˜nales espacio-
+temporales resultantes para cuantificar la coherencia del espectro de las ondas
+guiadas bajo distintas combinaciones experimentales.
+4. Optimizar la usabilidad y el despliegue de la plataforma mediante la
+consolidaci´on de su arquitectura de software basada en contenedores e interfaces
+web modernas (React, Flask y Docker ), documentando su infraestructura para
+garantizar su accesibilidad en la comunidad investigadora.
+6
+5. Metodolog´ıa
+El desarrollo de este trabajo de t´ıtulo se estructurar´a en cuatro fases metodol´ogi-
+cas secuenciales, alineadas directamente con los objetivos espec´ıficos planteados. Esta
+aproximaci´on combina el an´alisis num´erico de simulaciones f´ısicas con pr´acticas es-
+tandarizadas de la ingenier´ıa de software [?].
+Las fases del dise˜no metodol´ogico se detallan a continuaci´on:
+Fase 1: Configuraci´on Base y Calibraci´on Num´erica. Se definir´a un modelo de
+control o “caso base” que represente un escenario est´andar de propagaci´on guia-
+da en hueso cortical sano. Durante esta fase se realizar´an pruebas iterativas de
+convergencia para calibrar los par´ametros fijos del simulador. Principalmente,
+se ejecutar´a una comparativa de rendimiento y precisi´on num´erica utilizando ta-
+ma˜nos de malla de 0,05mm y 0,10mm, con el fin de establecer el balance ´optimo
+entre la resoluci´on espacial requerida por las altas frecuencias del ultrasonido
+y el costo computacional. Simult´aneamente, se determinar´an los m´argenes es-
+paciales adecuados (Edge Margin) para mitigar la interferencia por reflexiones
+espurias en los bordes del dominio.
+Fase 2: Ejecuci´on del An´alisis Param´etrico. Una vez validada la configuraci´on
+base, se dise˜nar´a e implementar´a una matriz de simulaciones. Esta matriz con-
+templar´a la variaci´on sistem´atica, tanto individual como combinada, de par´ame-
+tros de inter´es cl´ınico y experimental. Se ejecutar´an lotes de simulaci´on modifi-
+cando:
+La amplitud de la rugosidad superficial (roughness), para simular la textura
+irregular anat´omica del periostio y endostio.
+El ´angulo de incidencia de los transductores, simulando desviaciones en el
+posicionamiento de la sonda real.
+El coeficiente de atenuaci´on, incorporando la disipaci´on viscoel´astica del
+tejido.
+Fase 3: Procesamiento y Evaluaci´on de M´etricas. Los resultados crudos gene-
+rados por el motor de Elementos Finitos de BDAT —basado en FEniCS —,
+correspondientes a las se˜nales espacio-temporales capturadas por los receptores
+virtuales, ser´an exportados y procesados anal´ıticamente. Utilizando software
+de c´alculo matem´atico —como MATLAB o sus alternativas directas de c´odi-
+go abierto como GNU Octave o librer´ıas cient´ıficas en Python—, se aplicar´an
+transformadas bidimensionales para obtener las curvas de dispersi´on espectral.
+A partir de estas curvas, se cuantificar´a m´etricamente la “coherencia del es-
+pectro”, evaluando el nivel de distorsi´on o degradaci´on de las ondas guiadas
+provocado por los par´ametros alterados en la Fase 2 respecto al caso base ideal.
+7
+Fase 4: Optimizaci´on de Software y Preparaci´on para Difusi´on. La ´ultima fa-
+se abordar´a la consolidaci´on de la plataforma desde la Ingenier´ıa Civil Inform´ati-
+ca. Se revisar´a y optimizar´a la arquitectura del sistema, la cual opera con un
+frontend en React, un backend en Flask y comunicaci´on bidireccional v´ıa Web-
+Sockets. Se implementar´an mejoras en la interfaz de usuario (UI) y se asegurar´a
+la correcta orquestaci´on y empaquetado del software utilizando contenedores
+Docker. Asimismo, se integrar´an flujos de validaci´on automatizada y desplie-
+gue continuo (CI/CD). Finalmente, se redactar´a la documentaci´on t´ecnica y
+de usuario para garantizar que la plataforma BDAT sea accesible, instalable y
+operable por la comunidad cient´ıfica y cl´ınica interesada en la evaluaci´on de la
+fragilidad ´osea.
+8
+6. Planificaci´on y Cronograma
+Considerando que el hito de entrega final y la presentaci´on de la tesis est´an fijados
+para el 20 de noviembre de 2026, el proyecto contempla un cronograma intensivo de
+aproximadamente 12 semanas, comenzando a principios de septiembre. Las activida-
+des se ejecutar´an bajo un enfoque ´agil, priorizando la superposici´on de las simulaciones
+num´ericas con el procesamiento y an´alisis de datos.
+Fase 1: Configuraci´on Base y Calibraci´on Num´erica (Semanas 1–2 — Septiembre).
+Revisi´on bibliogr´afica sobre la propagaci´on de ondas guiadas y familiari-
+zaci´on con la arquitectura del simulador.
+Ejecuci´on intensiva de pruebas de convergencia de malla, validando el es-
+cenario de 0,10mm frente al de 0,05mm para optimizar los tiempos de
+c´omputo.
+Determinaci´on emp´ırica de los m´argenes de simulaci´on (Edge Margin) y
+consolidaci´on documentada del “Caso Base”.
+Fase 2: Ejecuci´on del An´alisis Param´etrico (Semanas 3–5 — Septiembre).
+Dise˜no de la matriz de simulaciones individuales y combinadas.
+Ejecuci´on de lotes de pruebas variando de forma aislada la rugosidad su-
+perficial (roughness), el ´angulo de incidencia de los transductores virtuales
+y el coeficiente de atenuaci´on.
+Ejecuci´on de simulaciones combinadas de alta complejidad cl´ınica y tabu-
+laci´on de las se˜nales espacio-temporales resultantes mediante lotes auto-
+matizados.
+Fase 3: Procesamiento y Evaluaci´on de M´etricas (Semanas 6–7 — Octubre).
+Desarrollo y adaptaci´on de scripts de procesamiento externo en MATLAB
+o Python para la lectura de los datos masivos exportados por BDAT.
+Generaci´on de gr´aficos del espectro de ondas guiadas mediante transfor-
+madas bidimensionales.
+Extracci´on matem´atica de la m´etrica de “coherencia del espectro” y an´ali-
+sis comparativo de los resultados param´etricos contra el escenario de con-
+trol.
+Fase 4: Optimizaci´on de Software y Difusi´on Cient´ıfica (Semanas 8–9 — Octubre).
+9
+Auditor´ıa t´ecnica y refactorizaci´on de c´odigo en el frontend (React) y bac-
+kend (Flask ) para asegurar la estabilidad de la plataforma web.
+Implementaci´on de mejoras en la interfaz de usuario (UI) para facilitar la
+accesibilidad en entornos de investigaci´on.
+Verificaci´on de la orquestaci´on en contenedores Docker, configuraci´on de
+flujos de integraci´on continua (CI/CD) y redacci´on de la documentaci´on
+t´ecnica (README y manuales).
+Fase 5: Redacci´on Final y Preparaci´on de Defensa (Semanas 10–12 — Noviembre).
+Redacci´on de los cap´ıtulos metodol´ogicos, an´alisis de resultados y conclu-
+siones del documento de tesis.
+Revisi´on iterativa del manuscrito con el profesor gu´ıa y formateo final del
+documento en LATEX.
+Preparaci´on del material visual, diapositivas y ensayos para la defensa del
+trabajo de t´ıtulo.
+Hito Final: Entrega del documento definitivo y defensa de la tesis el 20
+de noviembre de 2026.
+Con el fin de proveer una visualizaci´on estructurada del avance temporal, la Ta-
+bla 1 resume la distribuci´on de las actividades planificadas a lo largo de las 12 semanas
+de ejecuci´on.
+Tabla 1: Carta Gantt simplificada del proyecto (Semanas 1 a 12).
+Actividad / Fase S1 S2 S3 S4 S5 S6 S7 S8 S9 S10 S11 S12
+Fase 1: Calibraci´on Num´erica X X
+Fase 2: An´alisis Param´etrico X X X
+Fase 3: Evaluaci´on de M´etricas X X
+Fase 4: Optimizaci´on de Software X X
+Fase 5: Redacci´on de Tesis X X X
+Hito Final: Defensa (20 Nov) X
+10
+7. Recursos
+Para la correcta ejecuci´on del presente trabajo de t´ıtulo, se contempla la utilizaci´on
+de los siguientes recursos, clasificados en hardware, software, recursos humanos y
+financieros:
+7.1. Recursos de Hardware
+Equipos de Computaci´on Personal: Un equipo principal de desarrollo destinado
+a la programaci´on de la plataforma web, el procesamiento local de datos y la
+redacci´on del documento de tesis.
+Infraestructura de Procesamiento para Simulaci´on: Debido a la alta deman-
+da de CPU y memoria RAM que exigen las simulaciones num´ericas por Elemen-
+tos Finitos —especialmente al evaluar configuraciones con tama˜nos de malla de
+0,05 mm y 0,10 mm—, se requerir´a poder de c´omputo avanzado. Esto se cubrir´a
+mediante el uso de estaciones de trabajo locales y, de ser requerido para el pro-
+cesamiento en lotes masivos, la ejecuci´on en entornos virtualizados o instancias
+de m´aquinas virtuales en la nube mediante cr´editos acad´emicos en plataformas
+como Google Cloud.
+7.2. Recursos de Software e Infraestructura Tecnol´ogica
+El proyecto se apoya en un stack tecnol´ogico moderno orientado a la computaci´on
+cient´ıfica y al desarrollo de sistemas distribuidos:
+Motor de Simulaci´on Num´erica: Framework FEniCS para la resoluci´on compu-
+tacional por el M´etodo de Elementos Finitos (FE).
+Desarrollo Backend: Lenguaje Python (versi´on 3.11 o superior) utilizando el fra-
+mework Flask para el despliegue de la API REST y Flask-SocketIO para el
+manejo de procesos as´ıncronos mediante WebSockets.
+Desarrollo Frontend: Entorno Node.js utilizando React 19 (o superior) para la
+construcci´on de una interfaz de usuario basada en una aplicaci´on de p´agina
+´unica (SPA).
+Base de Datos: MySQL 8.0 para el registro, persistencia y almacenamiento de las
+configuraciones y estados de cada simulaci´on.
+Virtualizaci´on y Orquestaci´on: Docker y Docker Compose para asegurar un en-
+torno de ejecuci´on estandarizado, aislado y reproducible.
+Control de Versiones y CI/CD: Git para el control de versiones local, alojado
+de forma remota en la plataforma GitHub, aprovechando GitHub Actions para
+la automatizaci´on de flujos de integraci´on y despliegue continuo.
+11
+Procesamiento de Datos: Software de c´alculo num´erico especializado, contemplan-
+do el uso de MATLAB (bajo licencia) o su alternativa directa de c´odigo abier-
+to GNU Octave, en conjunto con librer´ıas cient´ıficas en Python —tales como
+NumPy y SciPy— para procesar, transformar y extraer las m´etricas de cohe-
+rencia del espectro.
+7.3. Recursos Humanos
+Estudiante Memorista: Alumno de la carrera de Ingenier´ıa Civil Inform´atica en-
+cargado de la ejecuci´on t´ecnica, las pruebas de software, el dise˜no metodol´ogico
+y la redacci´on final de la tesis.
+Profesor Gu´ıa: Docente experto encargado de brindar la orientaci´on cient´ıfica, la
+validaci´on metodol´ogica desde la perspectiva f´ısica y la supervisi´on del avance
+del proyecto hasta el hito de defensa fijado para noviembre.
+7.4. Recursos Financieros
+La investigaci´on no requiere de grandes fondos o financiamiento externo directo.
+Toda la base del desarrollo inform´atico del simulador se sustenta en tecnolog´ıas de
+c´odigo abierto (open-source), infraestructura local y servicios computacionales en la
+nube mediante cr´editos promocionales gestionados de forma independiente. Para el
+procesamiento anal´ıtico y extracci´on de m´etricas, se contempla el uso de software
+especializado (como MATLAB), el cual ser´a provisto mediante licencias acad´emicas
+institucionales o financiamiento interno del proyecto, garantizando la plena factibili-
+dad y viabilidad econ´omica de la propuesta.
+12
+Referencias
+[1] B. Dubot, M. Deniau, D. Ramiandrisoa, and J.-G. Minonzio, “Cor-
+tical bone assessment using ultrasonic guided waves: A reproducibility
+study in a healthy population,” Journal of Visualized Experiments, vol.
+215, p. e66985, 2025. [Online]. Available: https://www.jove.com/v/66985/
+cortical-bone-assessment-using-ultrasonic-guided-waves
+[2] Escuela de Ingenieria Civil Informatica, Universidad de Valparaiso. (2026) Bdat
+- bone guided wave analysis tool. [Online]. Available: https://informatica.uv.cl/
+escuela/academicos-jornada-completa?view=article&id=504:bdat&catid=2
+[3] D. Spinnoza. (2024) Bdat: Bone guided wave simulation platform. [Online].
+Available: https://github.com/DiegoSpinnoza/BDAT
+13

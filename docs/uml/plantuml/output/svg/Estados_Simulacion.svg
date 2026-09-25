@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="92px" preserveAspectRatio="none" style="width:353px;height:92px;background:#000000;" version="1.1" viewBox="0 0 353 92" width="353px" zoomAndPan="magnify"><defs/><g><rect fill="#171C15" height="1" style="stroke: #171C15; stroke-width: 1.0;" width="1" x="0" y="0"/><rect fill="#33FF02" height="21.2969" style="stroke: #33FF02; stroke-width: 1.0;" width="347" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="345" x="6" y="20">[From 03_estados_simulacion.puml (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.2969"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="237" x="5" y="56.5938">@startuml Estados_Simulacion</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="98" x="5" y="72.8906">!theme plain</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="106" x="10" y="89.1875">Syntax Error?</text><!--MD5=[3dd2b888c9d32090af2162529facdbdd]
+@startuml Estados_Simulacion
+!theme plain
+
+title Diagrama de Estados - Ciclo de Vida de Simulación
+
+[*] - -> GeneratingMesh : create()
+
+state "Generating Mesh" as GeneratingMesh {
+  GeneratingMesh : Generando malla\ncon GMSH
+}
+
+state "Not started" as NotStarted {
+  NotStarted : Lista para ejecutar
+}
+
+state "Queued" as Queued {
+  Queued : En cola de\nejecución
+}
+
+state "Running" as Running {
+  Running : Ejecutándose\ncon FEniCS
+  Running : Resolviendo\necuaciones
+}
+
+state "Finished" as Finished {
+  Finished : Completada\nexitosamente
+  Finished : Resultados .mat\ndisponibles
+}
+
+state "Error" as Error {
+  Error : Fallo durante\nejecución
+  Error : Logs disponibles
+}
+
+state "Aborting" as Aborting {
+  Aborting : Abortando\nproceso
+}
+
+state "Aborted" as Aborted {
+  Aborted : Abortada\npor usuario
+}
+
+GeneratingMesh - -> NotStarted : mesh_generated()
+GeneratingMesh - -> Error : mesh_generation_failed()
+
+NotStarted - -> Queued : execute()
+
+Queued - -> Running : process_queue()
+Queued - -> NotStarted : dequeue()
+
+Running - -> Finished : finished()
+Running - -> Error : error()
+Running - -> Aborting : abort()
+
+Aborting - -> Aborted : cleanup()
+
+Finished - -> Queued : re-execute()
+Error - -> Queued : re-execute()
+Aborted - -> Queued : re-execute()
+
+note right of GeneratingMesh
+  Estado inicial
+  Duración: 5-30 segundos
+end note
+
+note right of NotStarted
+  Estado predeterminado
+  Puede editarse
+end note
+
+note right of Queued
+  Orden: queue_position
+  Procesamiento secuencial
+end note
+
+note right of Running
+  Solo 1 simultánea
+  Duración: 2-60 minutos
+end note
+
+note right of Finished
+  Estado terminal (éxito)
+  Solo editar nombre
+end note
+
+note right of Error
+  Estado terminal (fallo)
+  Re-ejecutar disponible
+end note
+
+note right of Aborted
+  Interrupción manual
+  Re-ejecutar disponible
+end note
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 07:22:07 CLST 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.8+9-Ubuntu-0ubuntu124.04.1
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

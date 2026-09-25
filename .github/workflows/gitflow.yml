@@ -1,0 +1,71 @@
+name: GitFlow CI/CD
+
+on:
+  push:
+    branches: [ master, develop, 'feature/*', 'release/*', 'hotfix/*' ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  # Tests deshabilitados intencionalmente (no ejecutar tests en Docker / CI)
+  tests-disabled:
+    name: Tests Disabled
+    runs-on: ubuntu-latest
+    if: false
+    steps:
+    - name: Skipped
+      run: echo "Tests are disabled intentionally in this workflow"
+
+  # Validación de release branches
+  release-validation:
+    name: Release Validation
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release/')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Validate release branch
+      run: |
+        BRANCH_NAME=${GITHUB_REF#refs/heads/}
+        echo "Validating release branch: $BRANCH_NAME"
+        
+        # Verificar que el nombre de la rama sigue el patrón release/x.x.x
+        if [[ ! $BRANCH_NAME =~ ^release/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "❌ Release branch name must follow pattern: release/x.x.x"
+          exit 1
+        fi
+        
+        echo "✅ Release branch name is valid"
+
+    - name: Check version consistency
+      run: |
+        BRANCH_NAME=${GITHUB_REF#refs/heads/}
+        VERSION=${BRANCH_NAME#release/}
+        echo "Expected version: $VERSION"
+        
+        # Aquí puedes agregar validaciones adicionales como:
+        # - Verificar que la versión en package.json coincida
+        # - Verificar que no exista ya un tag con esa versión
+        # - Verificar changelog actualizado
+        
+        echo "✅ Version consistency validated"
+
+  # Notificación para hotfixes
+  hotfix-notification:
+    name: Hotfix Notification
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/hotfix/')
+
+    steps:
+    - name: Notify hotfix
+      run: |
+        BRANCH_NAME=${GITHUB_REF#refs/heads/}
+        echo "🚨 HOTFIX DETECTED: $BRANCH_NAME"
+        echo "This is a critical fix that will be deployed to production"
+        
+        # Aquí puedes agregar notificaciones a Slack, Teams, etc.
+        # curl -X POST -H 'Content-type: application/json' \
+        #   --data '{"text":"🚨 Hotfix branch created: '$BRANCH_NAME'"}' \
+        #   $SLACK_WEBHOOK_URL

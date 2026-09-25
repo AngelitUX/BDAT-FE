@@ -1,0 +1,115 @@
+\subsection{Diccionario de Datos}
+\label{ssc:DD}
+
+\small % Reduce tamaño de fuente
+\begin{longtable}{|p{3cm}|p{2cm}|p{8cm}|}
+\hline
+\textbf{Atributo/Método} & \textbf{Tipo} & \textbf{Descripción} \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: Simulation}} \\
+\hline
+id & Integer & Identificador único autoincremental de la simulación \\
+sim\_name & String & Nombre descriptivo asignado por el usuario \\
+code & String & Código único generado automáticamente \\
+p\_status & String & Estado actual (Not started, Running, Finished, Error, Queued, Aborted) \\
+start\_datetime & DateTime & Timestamp de inicio de ejecución \\
+end\_datetime & DateTime & Timestamp de finalización \\
+execution\_time & Float & Tiempo total de ejecución en segundos \\
+queue\_position & Integer & Posición en la cola de ejecución \\
+create() & Método & Crea una nueva simulación \\
+execute() & Método & Ejecuta la simulación \\
+abort() & Método & Aborta una simulación en ejecución \\
+update() & Método & Actualiza parámetros de la simulación \\
+delete() & Método & Elimina la simulación \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: GeometricParameters}} \\
+\hline
+plate\_thickness & Float & Espesor de la placa en milímetros \\
+plate\_length & Float & Longitud calculada de la placa en milímetros \\
+typical\_mesh\_size & Float & Tamaño típico del elemento de malla \\
+sensor\_edge\_margin & Float & Margen desde el borde hasta los sensores \\
+calculate\_length() & Método & Calcula automáticamente la longitud de la placa \\
+validate() & Método & Valida los parámetros geométricos \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: SensorConfiguration}} \\
+\hline
+n\_transmitter & Integer & Número de emisores (transductores) \\
+n\_receiver & Integer & Número de receptores (sensores) \\
+emitters\_pitch & Float & Separación entre emisores en milímetros \\
+receivers\_pitch & Float & Separación entre receptores en milímetros \\
+sensor\_distance & Float & Distancia entre emisores y receptores \\
+calculate\_positions() & Método & Calcula las posiciones de los sensores \\
+validate\_spacing() & Método & Valida el espaciado entre sensores \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: SensorPosition}} \\
+\hline
+id & Integer & Identificador único del sensor \\
+position\_z & Float & Posición en eje Z (horizontal) \\
+position\_y & Float & Posición en eje Y (vertical) \\
+type & String & Tipo de sensor (transmitter/receiver) \\
+get\_coordinates() & Método & Obtiene las coordenadas del sensor \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: MaterialProperties}} \\
+\hline
+porosity & Integer & Porosidad del hueso cortical (1-30\%) \\
+attenuation & Integer & Tipo de dominio (0=tiempo, 1=frecuencia) \\
+skin\_layer\_config & String & Configuración de tejido (simple/multilayer/none) \\
+validate\_porosity() & Método & Valida el rango de porosidad \\
+get\_tissue\_type() & Método & Retorna el tipo de configuración de tejido \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: MaterialData}} \\
+\hline
+C11, C12, C13 & Float & Constantes elásticas del material \\
+C33, C55, C66 & Float & Constantes elásticas del material \\
+density & Float & Densidad del material \\
+source & String & Fuente de datos (C\_values\_mathilde.mat) \\
+load\_from\_mat() & Método & Carga propiedades desde archivo MAT \\
+get\_stiffness\_matrix() & Método & Retorna matriz de rigidez \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: MeshData}} \\
+\hline
+xml\_file & String & Ruta al archivo XML (formato FEniCS/DOLFIN) \\
+msh\_file & String & Ruta al archivo MSH (formato GMSH) \\
+mesh\_vertices & JSON & Coordenadas de vértices [x, y, z] \\
+mesh\_faces & JSON & Conectividad triangular de la malla \\
+mesh\_metadata & JSON & Estadísticas (num\_vertices, num\_faces, hmin, hmax) \\
+mesh\_type & String & Tipo de generador de malla (GMSH/MSHR) \\
+generate() & Método & Genera la malla computacional \\
+visualize() & Método & Prepara datos para visualización 3D \\
+export() & Método & Exporta la malla en formato específico \\
+parse\_msh() & Método & Parsea archivo MSH \\
+parse\_xml() & Método & Parsea archivo XML \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: SimulationResults}} \\
+\hline
+file\_data & BLOB & Contenido binario del archivo .mat \\
+result\_step\_01 & String & Nombre del archivo de resultados \\
+download() & Método & Descarga el archivo de resultados \\
+visualize() & Método & Prepara datos para visualización \\
+process() & Método & Procesa resultados científicos \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: SensorData}} \\
+\hline
+sol\_sensors\_y & Array[nsens×ntimes] & Desplazamientos verticales de sensores \\
+sol\_sensors\_z & Array[nsens×ntimes] & Desplazamientos horizontales de sensores \\
+times & Array[ntimes] & Vector temporal de la simulación \\
+nsens & Integer & Número total de sensores \\
+ntimes & Integer & Número de pasos temporales \\
+get\_signal(sensor\_id) & Método & Obtiene señal de un sensor específico \\
+normalize() & Método & Normaliza las señales \\
+calculate\_fft() & Método & Calcula transformada de Fourier \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Clase: ExecutionQueue}} \\
+\hline
+queue & List<Simulation> & Lista de simulaciones en cola \\
+max\_concurrent & Integer & Número máximo de simulaciones concurrentes \\
+current\_running & Integer & Número actual de simulaciones en ejecución \\
+enqueue(sim) & Método & Agrega simulación a la cola \\
+dequeue(sim) & Método & Remueve simulación de la cola \\
+reorder(order) & Método & Reordena la cola de ejecución \\
+process\_queue() & Método & Procesa la cola secuencialmente \\
+get\_next() & Método & Obtiene próxima simulación a ejecutar \\
+\hline
+\caption{Diccionario de datos del sistema BDAT basado en el modelo conceptual.}
+\label{tab:diccionario_datos}
+\end{longtable}

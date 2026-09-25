@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 📏 Configuración base de tipografía (tamaño reducido) */
+body {
+  font-family: "Geist", sans-serif;
+  font-size: 0.8125rem;
+  /* 13px - tamaño base reducido */
+  line-height: 1.25rem;
+}
+
+/* Asegurar que todos los elementos hereden el tamaño base */
+* {
+  font-size: inherit;
+  line-height: inherit;
+}

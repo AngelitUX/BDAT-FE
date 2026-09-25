@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="92px" preserveAspectRatio="none" style="width:352px;height:92px;background:#000000;" version="1.1" viewBox="0 0 352 92" width="352px" zoomAndPan="magnify"><defs/><g><rect fill="#141404" height="1" style="stroke: #141404; stroke-width: 1.0;" width="1" x="0" y="0"/><rect fill="#33FF02" height="21.2969" style="stroke: #33FF02; stroke-width: 1.0;" width="346" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="344" x="6" y="20">[From 04_modelo_conceptual.puml (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.2969"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="307" x="5" y="56.5938">@startuml Modelo_Conceptual_Dominio</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="98" x="5" y="72.8906">!theme plain</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="106" x="10" y="89.1875">Syntax Error?</text><!--MD5=[b4f5e7ab2c5a916464a0ecde871ce222]
+@startuml Modelo_Conceptual_Dominio
+!theme plain
+
+title Modelo Conceptual - Sistema BDAT\nClases del Dominio
+
+class Simulation {
+  - id: Integer
+  - sim_name: String
+  - code: String
+  - p_status: String
+  - start_datetime: DateTime
+  - end_datetime: DateTime
+  - execution_time: Float
+  - queue_position: Integer
+  - -
+  + create()
+  + execute()
+  + abort()
+  + update()
+  + delete()
+}
+
+class GeometricParameters {
+  - plate_thickness: Float
+  - plate_length: Float
+  - typical_mesh_size: Float
+  - sensor_edge_margin: Float
+  - -
+  + calculate_length()
+  + validate()
+}
+
+class SensorConfiguration {
+  - n_transmitter: Integer
+  - n_receiver: Integer
+  - emitters_pitch: Float
+  - receivers_pitch: Float
+  - sensor_distance: Float
+  - -
+  + calculate_positions()
+  + validate_spacing()
+}
+
+class SensorPosition {
+  - id: Integer
+  - position_z: Float
+  - position_y: Float
+  - type: String
+  - -
+  + get_coordinates()
+}
+
+class MaterialProperties {
+  - porosity: Integer
+  - attenuation: Integer
+  - skin_layer_config: String
+  - -
+  + validate_porosity()
+  + get_tissue_type()
+}
+
+class MaterialData {
+  - C11, C12, C13: Float
+  - C33, C55, C66: Float
+  - density: Float
+  - source: String
+  - -
+  + load_from_mat()
+  + get_stiffness_matrix()
+}
+
+class MeshData {
+  - xml_file: String
+  - msh_file: String
+  - mesh_vertices: JSON
+  - mesh_faces: JSON
+  - mesh_metadata: JSON
+  - -
+  + generate()
+  + visualize()
+  + export()
+  + parse_msh()
+  + parse_xml()
+}
+
+class SimulationResults {
+  - file_data: BLOB
+  - result_step_01: String
+  - -
+  + download()
+  + visualize()
+  + process()
+}
+
+class SensorData {
+  - sol_sensors_y: Array[nsens×ntimes]
+  - sol_sensors_z: Array[nsens×ntimes]
+  - times: Array[ntimes]
+  - nsens: Integer
+  - ntimes: Integer
+  - -
+  + get_signal(sensor_id)
+  + normalize()
+  + calculate_fft()
+}
+
+class ExecutionQueue {
+  - queue: List<Simulation>
+  - max_concurrent: Integer
+  - current_running: Integer
+  - -
+  + enqueue(sim: Simulation)
+  + dequeue(sim: Simulation)
+  + reorder(order: List)
+  + process_queue()
+  + get_next()
+}
+
+Simulation "1" - - "1" GeometricParameters : has >
+Simulation "1" - - "1" SensorConfiguration : has >
+Simulation "1" - - "1" MaterialProperties : has >
+Simulation "1" - - "1" MeshData : has >
+Simulation "1" - - "1" SimulationResults : produces >
+
+GeometricParameters "1" - - "1" MeshData : defines >
+
+SensorConfiguration "1" - - "*" SensorPosition : defines >
+
+MaterialProperties "1" - - "1" MaterialData : uses >
+
+SimulationResults "1" - - "*" SensorData : contains >
+
+ExecutionQueue "1" o- - "*" Simulation : manages
+
+note right of Simulation
+  Clase principal
+  Representa una simulación
+  científica completa
+end note
+
+note right of MeshData
+  Archivos generados por GMSH
+  Soporta monocapa y multicapa
+end note
+
+note right of SensorData
+  Datos raw de simulación FEniCS
+  Base para procesamiento
+  (FFT, SVD, f-k)
+end note
+
+note bottom of ExecutionQueue
+  Gestión de cola FIFO
+  Procesamiento secuencial
+  max_concurrent = 1
+end note
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 07:22:07 CLST 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.8+9-Ubuntu-0ubuntu124.04.1
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

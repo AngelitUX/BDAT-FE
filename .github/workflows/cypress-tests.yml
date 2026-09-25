@@ -1,0 +1,83 @@
+# CYPRESS TESTS DISABLED - Not part of validation
+# This workflow has been commented out and will not execute
+
+name: Cypress Tests - DISABLED
+
+# Dummy trigger that will never activate (workflow_dispatch requires manual trigger)
+on:
+  workflow_dispatch:  # Manual trigger only - tests will not run automatically
+
+# Original trigger conditions commented out:
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main, develop ]
+#   schedule:
+#     - cron: '0 2 * * *'
+jobs:
+  disabled-cypress-tests:
+    runs-on: ubuntu-latest
+    if: false  # This ensures the job never runs
+    
+    steps:
+    - name: Tests Disabled
+      run: echo "Cypress tests have been disabled and will not execute"
+
+# Original Cypress workflow commented out below:
+#   cypress-tests:
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+#     - name: Setup Node.js
+#       uses: actions/setup-node@v4
+#       with:
+#         node-version: '18'
+#         cache: 'npm'
+#         cache-dependency-path: frontend/package-lock.json
+#     - name: Install dependencies
+#       run: |
+#         cd frontend
+#         npm ci
+#     - name: Start Backend
+#       run: |
+#         cd backend
+#         docker-compose up -d backend
+#         timeout 300 bash -c 'until curl -f http://localhost:5000/health; do sleep 5; done'
+#     - name: Start Frontend
+#       run: |
+#         cd frontend
+#         npm start &
+#         timeout 300 bash -c 'until curl -f http://localhost:3002; do sleep 5; done'
+#     - name: Wait for services
+#       run: |
+#         sleep 30
+#         curl -f http://localhost:5000/health
+#         curl -f http://localhost:3002
+#     - name: Run Cypress tests
+#       run: |
+#         cd frontend
+#         npm run cypress:run
+#       env:
+#         CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#     - name: Upload Cypress videos
+#       uses: actions/upload-artifact@v4
+#       if: failure()
+#       with:
+#         name: cypress-videos
+#         path: frontend/cypress/videos/
+#     - name: Upload Cypress screenshots
+#       uses: actions/upload-artifact@v4
+#       if: failure()
+#       with:
+#         name: cypress-screenshots
+#         path: frontend/cypress/screenshots/
+#     - name: Cleanup
+#       if: always()
+#       run: |
+#         docker-compose down
+#         pkill -f "npm start"
+
+

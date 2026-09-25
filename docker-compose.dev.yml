@@ -1,0 +1,141 @@
+version: "3.9"
+
+services:
+  mysql:
+    build:
+      context: ./database
+    image: mysql:8.0.42
+    container_name: mysql
+    restart: always
+    volumes:
+      - dbdata:/var/lib/mysql
+    command: ["mysqld", "--default-authentication-plugin=caching_sha2_password", "--wait_timeout=2592000", "--interactive_timeout=2592000", "--max_allowed_packet=64M"]
+    environment:
+      MYSQL_ROOT_PASSWORD: 'BDATpassword'
+      MYSQL_DATABASE: 'BDAT_FE_simulations'
+      MYSQL_USER: 'UserBDAT'
+      MYSQL_PASSWORD: 'BDATpassword'
+    ports:
+      - '3306:3306'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: always
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./backend:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      FLASK_APP: src.app
+      DOCKER_ENV: 'true'
+      PYTHONPATH: /app/src
+      PYTHONUNBUFFERED: '1'
+      EVENTLET_NO_GREENDNS: 'yes'
+      MYSQL_HOST: 'mysql'
+      MYSQL_PORT: '3306'
+      MYSQL_USER: 'UserBDAT'
+      MYSQL_PASSWORD: 'BDATpassword'
+      MYSQL_DB: 'BDAT_FE_simulations'
+      FLASK_ENV: 'development'
+      CELERY_BROKER_URL: 'redis://redis:6379/0'
+      CELERY_RESULT_BACKEND: 'redis://redis:6379/0'
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    command: ["watchmedo", "auto-restart", "--directory=/app/src", "--pattern=*.py", "--ignore-patterns=*.pyc;*/__pycache__/*", "--recursive", "--", "python3", "src/app.py"]
+
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: celery-worker
+    restart: always
+    volumes:
+      - ./backend:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      PYTHONPATH: /app/src
+      PYTHONUNBUFFERED: '1'
+      EVENTLET_NO_GREENDNS: 'yes'
+      MYSQL_HOST: 'mysql'
+      MYSQL_PORT: '3306'
+      MYSQL_USER: 'UserBDAT'
+      MYSQL_PASSWORD: 'BDATpassword'
+      MYSQL_DB: 'BDAT_FE_simulations'
+      CELERY_BROKER_URL: 'redis://redis:6379/0'
+      CELERY_RESULT_BACKEND: 'redis://redis:6379/0'
+      # Variables para FEniCS y optimización
+      OMP_NUM_THREADS: ''  # Vacio = OpenMP usa automaticamente todos los cores de CPU
+      MKL_NUM_THREADS: ''
+      OPENBLAS_NUM_THREADS: ''
+    # Límites de recursos - ajusta según tu hardware
+    deploy:
+      resources:
+        limits:
+          cpus: '0'  # 0 = sin límite, usa todos los CPUs disponibles
+          memory: 8G  # Límite de memoria (ajusta según tu RAM)
+        reservations:
+          cpus: '2'  # Mínimo 2 CPUs reservados
+          memory: 2G  # Mínimo 2GB de RAM
+    command: ["python3", "-m", "celery", "-A", "celery_worker.celery", "worker", "--loglevel=info", "--concurrency=1", "--pool=solo"]
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend-react
+    stdin_open: true
+    ports:
+      - '3002:3002'
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      PORT: 3002
+      REACT_APP_API_URL: "http://localhost:5000"
+    command: npm start
+
+volumes:
+  dbdata:
+    name: bdat-develop_dbdata

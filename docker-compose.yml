@@ -1,0 +1,70 @@
+services:
+    mysql:
+        build: 
+            context: ./database
+        container_name: mysql
+        restart: always
+        image: mysql:8.0.42
+        volumes: 
+          - dbdata:/var/lib/mysql
+        environment:
+          MYSQL_ROOT_PASSWORD: 'BDATpassword'
+          MYSQL_DATABASE: 'BDAT_FE_simulations'
+          MYSQL_USER: 'UserBDAT'
+          MYSQL_PASSWORD: 'BDATpassword'
+        ports:
+            - '3306:3306'
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    backend:
+        depends_on:
+            mysql:
+                condition: service_healthy
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        container_name: backend
+        restart: always
+        ports:
+            - '5000:5000'
+        environment:
+            DOCKER_ENV: 'true'
+            MYSQL_HOST: 'mysql'
+            MYSQL_PORT: '3306'
+            MYSQL_USER: 'UserBDAT'
+            MYSQL_PASSWORD: 'BDATpassword'
+            MYSQL_DB: 'BDAT_FE_simulations'
+            FLASK_ENV: 'production'
+
+    frontend:
+        depends_on:
+          - mysql
+          - backend
+        build:
+            context: ./frontend/
+            dockerfile: Dockerfile
+        container_name: frontend-react
+        stdin_open: true
+        ports:
+            - '3002:3002'
+        environment:
+            CHOKIDAR_USEPOLLING: "true"
+            
+    tests:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        depends_on:
+            - backend
+        command: >
+            sh -c "pytest test/ -s -v"
+        environment:
+            BASE_URL: http://backend:5000
+
+        
+volumes: 
+    dbdata:

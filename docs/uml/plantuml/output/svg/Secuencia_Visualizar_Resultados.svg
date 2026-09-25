@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="92px" preserveAspectRatio="none" style="width:371px;height:92px;background:#000000;" version="1.1" viewBox="0 0 371 92" width="371px" zoomAndPan="magnify"><defs/><g><rect fill="#1B1401" height="1" style="stroke: #1B1401; stroke-width: 1.0;" width="1" x="0" y="0"/><rect fill="#33FF02" height="21.2969" style="stroke: #33FF02; stroke-width: 1.0;" width="365" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="363" x="6" y="20">[From 07_secuencia_resultados.puml (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.2969"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="342" x="5" y="56.5938">@startuml Secuencia_Visualizar_Resultados</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="98" x="5" y="72.8906">!theme plain</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="106" x="10" y="89.1875">Syntax Error?</text><!--MD5=[2b4c89c5c593f5c9dd405a26a0fda767]
+@startuml Secuencia_Visualizar_Resultados
+!theme plain
+
+title Diagrama de Secuencia del Sistema (DSS)\nVisualizar Resultados de Simulación
+
+actor "Investigador" as User
+participant "Frontend" as Frontend
+participant "Backend" as Backend
+participant "results_processor" as Processor
+database "Base de Datos" as DB
+
+User -> Frontend : Click "View Results"
+activate Frontend
+
+Frontend -> Backend : GET /simulations/{id}/results
+activate Backend
+
+Backend -> DB : SELECT simulation\nWHERE id = {id}
+activate DB
+DB - -> Backend : simulation_data
+deactivate DB
+
+Backend -> Backend : Verificar\np_status == "Finished"
+
+Backend -> Processor : process_simulation_results(\nid, simulation_data)
+activate Processor
+
+Processor -> Processor : Cargar archivo .mat\n(file_data BLOB)
+
+Processor -> Processor : Parse datos:\n• sol_sensors_y\n• sol_sensors_z\n• times
+
+group Procesamiento Científico
+  Processor -> Processor : **1. Señales Espacio-Temporales**\nNormalizar señales\n30 receptores × tiempo
+  
+  Processor -> Processor : **2. Valores Singulares (SVD)**\nCalcular FFT en tiempo\nSVD en frecuencias\nRango: 0-2 MHz\nEscala: dB
+  
+  Processor -> Processor : **3. Espectro f-k**\nFFT 2D (tiempo + espacio)\nDominio frecuencia-wavenumber\nCurvas de dispersión
+end
+
+Processor - -> Backend : {\n  spatioTemporal: {...},\n  singularValues: {...},\n  spectrumData: {...}\n}
+deactivate Processor
+
+Backend - -> Frontend : 200 OK\nJSON results
+deactivate Backend
+
+Frontend -> Frontend : Renderizar visualizaciones:\n• Recharts (señales, SVD)\n• Canvas (heatmap f-k)\n• Controles interactivos
+
+User <- - Frontend : Visualiza resultados\ncientíficos procesados
+deactivate Frontend
+
+== Opcional: Descargar ==
+
+User -> Frontend : Click "Download .mat"
+activate Frontend
+
+Frontend -> Backend : GET /simulations/{id}/download
+activate Backend
+
+Backend -> DB : SELECT file_data\nWHERE id = {id}
+activate DB
+DB - -> Backend : BLOB data
+deactivate DB
+
+Backend - -> Frontend : 200 OK\nContent-Type: application/octet-stream\nContent-Disposition: attachment
+deactivate Backend
+
+Frontend -> Frontend : Iniciar descarga\narchivo: {sim_name}.mat
+
+User <- - Frontend : Archivo descargado
+deactivate Frontend
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 07:22:07 CLST 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.8+9-Ubuntu-0ubuntu124.04.1
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

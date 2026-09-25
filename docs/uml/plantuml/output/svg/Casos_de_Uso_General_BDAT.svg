@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="92px" preserveAspectRatio="none" style="width:349px;height:92px;background:#000000;" version="1.1" viewBox="0 0 349 92" width="349px" zoomAndPan="magnify"><defs/><g><rect fill="#111514" height="1" style="stroke: #111514; stroke-width: 1.0;" width="1" x="0" y="0"/><rect fill="#33FF02" height="21.2969" style="stroke: #33FF02; stroke-width: 1.0;" width="343" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="341" x="6" y="20">[From 01_casos_uso_general.puml (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.2969"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="314" x="5" y="56.5938">@startuml Casos_de_Uso_General_BDAT</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="98" x="5" y="72.8906">!theme plain</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="106" x="10" y="89.1875">Syntax Error?</text><!--MD5=[4a6c8c91ae2a9964eaf578815bc19111]
+@startuml Casos_de_Uso_General_BDAT
+!theme plain
+skinparam packageStyle rectangle
+
+title Diagrama de Casos de Uso - Sistema BDAT\nBone Guided Wave Simulation Platform
+
+left to right direction
+
+actor "Investigador\nCientífico" as Investigador
+
+rectangle "Sistema BDAT" {
+  
+  package "Gestión de Simulaciones" {
+    usecase "CU-01.1\nCrear Simulación" as UC011
+    usecase "CU-01.2\nVisualizar Simulación" as UC012
+    usecase "CU-01.3\nEditar Simulación" as UC013
+    usecase "CU-01.4\nDuplicar Simulación" as UC014
+    usecase "CU-01.5\nEliminar Simulación(es)" as UC015
+  }
+  
+  package "Ejecución" {
+    usecase "CU-02.1\nEjecutar Simulación" as UC021
+    usecase "CU-02.2\nRe-ejecutar Simulación" as UC022
+    usecase "CU-02.3\nAbortar Simulación" as UC023
+  }
+  
+  package "Cola de Ejecución" {
+    usecase "CU-03.1\nVer Cola" as UC031
+    usecase "CU-03.2\nReordenar Cola" as UC032
+    usecase "CU-03.3\nDesencolar Simulación" as UC033
+  }
+  
+  package "Visualización" {
+    usecase "CU-04.1\nVer Malla 3D" as UC041
+    usecase "CU-04.2\nDescargar Malla" as UC042
+  }
+  
+  package "Análisis de Resultados" {
+    usecase "CU-05.1\nVisualizar Señales\nEspacio-Temporales" as UC051
+    usecase "CU-05.2\nVisualizar Valores\nSingulares (SVD)" as UC052
+    usecase "CU-05.3\nVisualizar Espectro f-k" as UC053
+    usecase "CU-05.4\nDescargar Resultados" as UC054
+  }
+  
+  package "Búsqueda y Filtrado" {
+    usecase "CU-06\nBuscar y Filtrar\nSimulaciones" as UC06
+  }
+  
+  package "Monitoreo" {
+    usecase "CU-07.1\nVer Estadísticas" as UC071
+    usecase "CU-07.2\nVer Simulaciones\nActivas" as UC072
+    usecase "CU-07.3\nRecibir\nNotificaciones" as UC073
+  }
+  
+  usecase "Validar Datos" as ValidarDatos <<include>>
+  usecase "Generar Malla" as GenerarMalla <<include>>
+  usecase "Encolar Simulación" as Encolar <<include>>
+  usecase "Confirmar Acción" as Confirmar <<include>>
+  
+}
+
+actor "Sistema\nFEniCS" as FEniCS
+actor "Sistema\nGMSH" as GMSH
+actor "Sistema\nWebSocket" as WebSocket
+
+Investigador - -> UC011
+Investigador - -> UC012
+Investigador - -> UC013
+Investigador - -> UC014
+Investigador - -> UC015
+
+Investigador - -> UC021
+Investigador - -> UC022
+Investigador - -> UC023
+
+Investigador - -> UC031
+Investigador - -> UC032
+Investigador - -> UC033
+
+Investigador - -> UC041
+Investigador - -> UC042
+
+Investigador - -> UC051
+Investigador - -> UC052
+Investigador - -> UC053
+Investigador - -> UC054
+
+Investigador - -> UC06
+
+Investigador - -> UC071
+Investigador - -> UC072
+Investigador - -> UC073
+
+UC011 ..> ValidarDatos : <<include>>
+UC011 ..> GenerarMalla : <<include>>
+UC013 ..> ValidarDatos : <<include>>
+UC013 ..> GenerarMalla : <<include>>
+UC015 ..> Confirmar : <<include>>
+
+UC021 ..> Encolar : <<include>>
+UC022 ..> Encolar : <<include>>
+
+UC013 .> UC012 : <<extend>>\n[Estado: Not started]
+UC022 .> UC021 : <<extend>>\n[Estado: Finished|Error]
+UC023 .> UC021 : <<extend>>\n[Estado: Running]
+
+GenerarMalla - -> GMSH
+UC021 - -> FEniCS
+UC022 - -> FEniCS
+WebSocket - -> UC073
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 07:22:07 CLST 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.8+9-Ubuntu-0ubuntu124.04.1
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

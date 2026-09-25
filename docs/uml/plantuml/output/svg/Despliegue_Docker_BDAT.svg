@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="92px" preserveAspectRatio="none" style="width:291px;height:92px;background:#000000;" version="1.1" viewBox="0 0 291 92" width="291px" zoomAndPan="magnify"><defs/><g><rect fill="#270311" height="1" style="stroke: #270311; stroke-width: 1.0;" width="1" x="0" y="0"/><rect fill="#33FF02" height="21.2969" style="stroke: #33FF02; stroke-width: 1.0;" width="284" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="279" x="6" y="20">[From 06_despliegue.puml (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.2969"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="284" x="5" y="56.5938">@startuml Despliegue_Docker_BDAT</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="98" x="5" y="72.8906">!theme plain</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="106" x="10" y="89.1875">Syntax Error?</text><!--MD5=[6053c222bf617feb256899e7cc1d97c8]
+@startuml Despliegue_Docker_BDAT
+!theme plain
+
+title Diagrama de Despliegue - Entorno Docker\nSistema BDAT
+
+skinparam nodeStyle rectangle
+
+actor "Usuario" as User
+node "Navegador Web" as Browser {
+  artifact "React SPA" as ReactApp
+}
+
+cloud "Docker Environment" {
+  
+  node "frontend:3002" as FrontendNode <<Container>> {
+    artifact "node:18-alpine" as NodeImage
+    component "React Dev Server" as ReactServer
+    artifact "Volume: ./frontend:/app" as FrontendVol
+    
+    ReactServer -down-> FrontendVol
+  }
+  
+  node "backend:5000" as BackendNode <<Container>> {
+    artifact "python:3.11-slim" as PythonImage
+    component "Flask Application" as FlaskApp
+    component "Flask-SocketIO" as SocketIOComp
+    component "FEniCS Engine" as FenicsComp
+    artifact "Volume: ./backend:/app" as BackendVol
+    artifact "Volume: ./meshes:/app/meshes" as MeshesVol
+    
+    FlaskApp -down-> BackendVol
+    FenicsComp -down-> MeshesVol
+  }
+  
+  node "mysql:3306" as MySQLNode <<Container>> {
+    artifact "mysql:8.0.42" as MySQLImage
+    database "BDAT Database" as BDATdb
+    artifact "Volume: ./database/init.sql" as InitSQL
+    artifact "Volume: mysql_data:/var/lib/mysql" as MySQLData
+    
+    BDATdb -down-> MySQLData
+    InitSQL -down-> BDATdb : initialize
+  }
+  
+  package "Docker Network: bdat_network" {
+    FrontendNode -[hidden]down- BackendNode
+    BackendNode -[hidden]down- MySQLNode
+  }
+}
+
+User - -> Browser : Acceso\nhttp://localhost:3002
+Browser - -> ReactApp
+
+ReactApp - -> FrontendNode : <<deploy>>
+FrontendNode - -> BackendNode : HTTP/REST\nWebSocket\nPort 5000
+
+BackendNode - -> MySQLNode : MySQL Protocol\nPort 3306
+
+note right of FrontendNode
+  **Configuración:**
+  Port: 3002:3000
+  Restart: always
+  Hot reload activado
+  
+  **Variables de entorno:**
+  REACT_APP_API_URL=
+    http://localhost:5000
+end note
+
+note right of BackendNode
+  **Configuración:**
+  Port: 5000:5000
+  Restart: always
+  
+  **Variables de entorno:**
+  MYSQL_HOST=mysql
+  MYSQL_PORT=3306
+  MYSQL_DATABASE=bdat
+  MYSQL_USER=bdat_user
+  MYSQL_PASSWORD=***
+  FLASK_ENV=development
+end note
+
+note right of MySQLNode
+  **Configuración:**
+  Port: 3306:3306
+  Restart: always
+  
+  **Variables de entorno:**
+  MYSQL_ROOT_PASSWORD=***
+  MYSQL_DATABASE=bdat
+  MYSQL_USER=bdat_user
+  MYSQL_PASSWORD=***
+  
+  **Persistencia:**
+  Volume named: mysql_data
+end note
+
+note bottom of "Docker Network: bdat_network"
+  Red interna para
+  comunicación entre contenedores
+  
+  **DNS interno:**
+  • frontend
+  • backend
+  • mysql
+end note
+
+legend right
+  **Orquestación:**
+  docker-compose.yml
+  
+  **Comandos:**
+  docker-compose up -d
+  docker-compose logs -f
+  docker-compose down
+  
+  **Versiones:**
+  • Docker: Latest
+  • Docker Compose: v2.x
+endlegend
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 07:22:07 CLST 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.8+9-Ubuntu-0ubuntu124.04.1
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

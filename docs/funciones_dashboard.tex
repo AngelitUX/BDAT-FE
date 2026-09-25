@@ -1,0 +1,101 @@
+\subsection{Funcionalidades del Dashboard Principal}
+\label{ssc:dashboard}
+
+El Dashboard principal del sistema BDAT constituye la interfaz central desde la cual el usuario puede gestionar todas las simulaciones. Se encuentra accesible en la ruta \texttt{/simulations} y presenta las siguientes secciones funcionales:
+
+\subsubsection{Botón de Nueva Simulación}
+\begin{itemize}
+    \item \textbf{Nombre:} New Simulation
+    \item \textbf{Función:} Abre un formulario modal para crear una nueva simulación
+    \item \textbf{Acción:} Al hacer clic, despliega un formulario donde el usuario puede ingresar:
+    \begin{itemize}
+        \item Parámetros geométricos (espesor, tamaño de malla)
+        \item Configuración de sensores (número de emisores/receptores, separación)
+        \item Propiedades del material (porosidad, atenuación)
+    \end{itemize}
+    \item \textbf{Resultado:} Crea una nueva simulación en estado ``Not started'' lista para ejecutarse
+\end{itemize}
+
+\subsubsection{Panel de Indicadores Clave (Key Insights)}
+\begin{itemize}
+    \item \textbf{Nombre:} Key Insights
+    \item \textbf{Función:} Muestra estadísticas en tiempo real del sistema
+    \item \textbf{Indicadores mostrados:}
+    \begin{enumerate}
+        \item \textbf{Total:} Número total de simulaciones en el sistema
+        \item \textbf{Running:} Cantidad de simulaciones actualmente en ejecución
+        \item \textbf{Finished:} Número de simulaciones completadas exitosamente
+        \item \textbf{Not Started:} Simulaciones creadas pero no ejecutadas
+        \item \textbf{Error:} Simulaciones que fallaron durante la ejecución
+    \end{enumerate}
+    \item \textbf{Actualización:} Los indicadores se actualizan automáticamente mediante WebSocket
+\end{itemize}
+
+\subsubsection{Lista de Simulaciones}
+\begin{itemize}
+    \item \textbf{Nombre:} Simulations List
+    \item \textbf{Función:} Tabla interactiva con todas las simulaciones del sistema
+    \item \textbf{Columnas mostradas:}
+    \begin{itemize}
+        \item Nombre de la simulación
+        \item Estado actual (Not started, Running, Finished, Error, Queued, Aborted)
+        \item Tiempo de ejecución
+        \item Fecha de creación
+        \item Acciones disponibles (Ver, Ejecutar, Eliminar)
+    \end{itemize}
+    \item \textbf{Funcionalidades:}
+    \begin{itemize}
+        \item Ordenamiento por columnas
+        \item Búsqueda por nombre
+        \item Filtros avanzados (estado, porosidad, atenuación)
+        \item Paginación de resultados
+        \item Selección múltiple para eliminación
+    \end{itemize}
+    \item \textbf{Acciones por fila:}
+    \begin{itemize}
+        \item \textit{Ver:} Abre modal con detalles, malla 3D y resultados
+        \item \textit{Ejecutar:} Inicia la simulación (solo si estado = Not started)
+        \item \textit{Eliminar:} Borra la simulación de la base de datos
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Cola de Ejecución}
+\begin{itemize}
+    \item \textbf{Nombre:} Queue
+    \item \textbf{Función:} Gestiona el orden de ejecución de las simulaciones
+    \item \textbf{Características:}
+    \begin{itemize}
+        \item Muestra simulaciones en estado ``Queued''
+        \item Permite reordenar la prioridad mediante drag-and-drop
+        \item Muestra la posición en cola de cada simulación
+        \item Permite desencolar simulaciones antes de su ejecución
+    \end{itemize}
+    \item \textbf{Lógica de procesamiento:}
+    \begin{itemize}
+        \item Las simulaciones se procesan secuencialmente
+        \item Solo una simulación puede estar en estado ``Running'' a la vez
+        \item Al finalizar una simulación, automáticamente se procesa la siguiente en cola
+    \end{itemize}
+    \item \textbf{Actualización:} Se actualiza en tiempo real mediante WebSocket cuando:
+    \begin{itemize}
+        \item Se agrega una nueva simulación a la cola
+        \item Una simulación comienza a ejecutarse
+        \item Una simulación finaliza o es abortada
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Barra de Búsqueda}
+\begin{itemize}
+    \item \textbf{Función:} Filtrado rápido de simulaciones por nombre
+    \item \textbf{Comportamiento:} Búsqueda en tiempo real mientras el usuario escribe
+    \item \textbf{Alcance:} Busca coincidencias en el campo \texttt{sim\_name}
+\end{itemize}
+
+\subsubsection{Notificaciones en Tiempo Real}
+El Dashboard está conectado mediante WebSocket al servidor backend, lo que permite:
+\begin{itemize}
+    \item Actualización automática del estado de simulaciones
+    \item Notificaciones de cambios sin necesidad de refrescar la página
+    \item Sincronización entre múltiples usuarios conectados simultáneamente
+    \item Visualización en tiempo real del progreso de simulaciones en ejecución
+\end{itemize}

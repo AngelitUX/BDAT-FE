@@ -1,0 +1,35 @@
+eventlet==0.33.3
+flask-socketio==5.3.4
+python-engineio==4.5.1
+python-socketio==5.8.0
+
+sqlalchemy == 1.4.0
+marshmallow == 3.14.1
+mysql-connector-python == 8.0.28
+pymysql == 1.0.2
+flask-sqlalchemy == 2.5.1
+flask-mysqldb == 0.2.0
+flask-cors == 3.0.10
+# eventlet 0.34+ is not compatible con Python 3.8
+# y puede causar problemas con Flask-SocketIO
+# por eso se fija la versión máxima compatible
+# https://flask-socketio.readthedocs.io/en/latest/#eventlet-support
+# https://github.com/miguelgrinberg/Flask-SocketIO/issues/1781
+fenics == 2019.1.0
+fenics-ffc == 2019.1.0.post0
+gmsh == 4.11.1
+meshio == 5.3.4
+scipy >= 1.7.0, < 1.12.0
+numpy >= 1.20.0, < 1.25.0
+pandas == 1.3.4
+flask>=2.2,<3
+Werkzeug>=2.2,<3
+pytest>=7.0,<9.0
+pytest-cov>=4.0,<5.0
+python-dotenv==1.0.1
+requests
+celery==5.3.4
+redis==5.0.1
+matplotlib>=3.5.0,<4.0.0
+watchdog>=3.0.0  # hot reload en desarrollo: watchmedo auto-restart
+# h5py==3.7.0  # Installed separately in Dockerfile

@@ -1,0 +1,28 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+sqlalchemy = "*"
+flask = "*"
+marshmallow = "*"
+mysql-connector-python = "*"
+pymysql = "*"
+flask-sqlalchemy = "*"
+flask-mysqldb = "==0.2.0"
+flask-cors = "*"
+flask-socketio = "*"
+eventlet = "*"
+fenics = "*"
+fenics-ffc = "*"
+mshr = "*"
+gmsh = "*"
+meshio = "*"
+matplotlib = "*"
+
+[dev-packages]
+pytest-dotenv = "*"
+
+[requires]
+python_version = "3.8"
