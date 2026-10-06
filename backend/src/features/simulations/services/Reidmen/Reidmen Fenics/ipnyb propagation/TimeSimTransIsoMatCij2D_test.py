@@ -95,7 +95,7 @@ def fmain (n_transmitter, n_receiver, distance, emitter_pitch, receiver_pitch, s
     #     print(" Generando mesh con mshr...")
     #     domain = Rectangle(Point(0., 0.), Point(zlim, ylim))
     #     mesh = generate_mesh(domain, size)
-    # elif mesh_type == "gmsh":
+    # elif mesh_type in ("gmsh", "imported"):
     #     print(" Generando mesh gradual con gmsh...")
     #     filename = f"gmsh_gradual_{id}"
     #     xml_file = create_rectangle_mesh_gradual(zlim, ylim, dxt, filename)
@@ -110,8 +110,8 @@ def fmain (n_transmitter, n_receiver, distance, emitter_pitch, receiver_pitch, s
         #     domain = Rectangle(Point(0., 0.), Point(zlim, ylim))
         #     mesh = generate_mesh(domain, size)
     
-    if mesh_type == "gmsh":
-        print(" Cargando mesh desde archivo XML (generado con gmsh)...")
+    if mesh_type in ("gmsh", "imported"):
+        print(" Cargando mesh desde archivo XML (generado con gmsh o importado)...")
         _mesh_in = Mesh(xml_file)
         _mesh_in.init()
         _coords = _mesh_in.coordinates()

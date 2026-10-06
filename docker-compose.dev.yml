@@ -6,7 +6,7 @@ services:
       context: ./database
     image: mysql:8.0.42
     container_name: mysql
-    restart: always
+    restart: "no"
     volumes:
       - dbdata:/var/lib/mysql
     command: ["mysqld", "--default-authentication-plugin=caching_sha2_password", "--wait_timeout=2592000", "--interactive_timeout=2592000", "--max_allowed_packet=64M"]
@@ -18,10 +18,11 @@ services:
     ports:
       - '3306:3306'
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uUserBDAT -pBDATpassword"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 15s
 
   redis:
     image: redis:7-alpine
@@ -39,7 +40,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend
-    restart: always
+    restart: "no"
     ports:
       - '5000:5000'
     volumes:
@@ -81,7 +82,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: celery-worker
-    restart: always
+    restart: "no"
     volumes:
       - ./backend:/app
     depends_on:

@@ -3,6 +3,7 @@ import Table from './Table';
 import SimulationModal from './SimulationModal';
 import QueueView from './QueueView';
 import BatchImportModal from './BatchImportModal';
+import ImportMeshModal from './components/ImportMeshModal';
 import SimulationControlBar from './components/SimulationControlBar';
 import DownloadTypeModal from './components/DownloadTypeModal';
 import { Plus, Clock, Upload, ArrowRight, Loader2, XCircle } from 'lucide-react';
@@ -67,6 +68,7 @@ const Simulations = () => {
     const [searchFilters, setSearchFilters] = useState(null);
     const [editingSimulationId, setEditingSimulationId] = useState(null);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [isImportMeshModalOpen, setIsImportMeshModalOpen] = useState(false);
     const [isBatchCreating, setIsBatchCreating] = useState(false);
     // Ref kept in sync with isBatchCreating so the WebSocket handler (created
     // once on mount) can read current running state without a stale closure.
@@ -1038,6 +1040,7 @@ const Simulations = () => {
                                 onNextPage={handleNextPage}
                                 onNewSimulation={handleNewSimulation}
                                 onImport={() => setIsImportModalOpen(true)}
+                                onImportMesh={() => setIsImportMeshModalOpen(true)}
                                 onOpenQueue={() => setIsQueueViewOpen(true)}
                                 isBatchCreating={isBatchCreating}
                                 activeSimulations={activeSimulations}
@@ -1095,6 +1098,19 @@ const Simulations = () => {
                         onClose={() => setDownloadModalState({ isOpen: false, type: null, ids: [] })}
                         onConfirm={processDownload}
                         isBatch={downloadModalState.type !== 'individual'}
+                    />
+
+                    <ImportMeshModal
+                        isOpen={isImportMeshModalOpen}
+                        onClose={() => setIsImportMeshModalOpen(false)}
+                        onSuccess={(newSim) => {
+                            if (newSim) {
+                                setSimulations(prev => {
+                                    if (prev.some(s => s.id === newSim.id)) return prev;
+                                    return [newSim, ...prev];
+                                });
+                            }
+                        }}
                     />
 
                     <BatchImportModal

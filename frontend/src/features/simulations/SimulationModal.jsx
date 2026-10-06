@@ -343,7 +343,7 @@ const SimulationModal = ({
                 return;
             }
             // Validación de mesh_type
-            if (formData.mesh_type !== 'gmsh' && formData.mesh_type !== 'mshr') {
+            if (formData.mesh_type !== 'gmsh' && formData.mesh_type !== 'mshr' && formData.mesh_type !== 'imported') {
                 toast.warning('Please select a valid Mesh Type (gmsh or mshr).');
                 return;
             }
@@ -1172,36 +1172,48 @@ const SimulationModal = ({
                                                         Mesh Type <span className="ml-1 text-[10px] text-gray-400">(Generator)</span>
                                                     </label>
                                                     <div className="flex gap-2">
-                                                        <button type="button"
-                                                            onClick={() => handleInputChange({ target: { name: 'mesh_type', value: 'gmsh' } })}
-                                                            className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all cursor-pointer
-                                                            ${formData.mesh_type === 'gmsh'
-                                                                    ? 'border-blue-400 bg-blue-50 text-blue-800 shadow-sm'
-                                                                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}
-                                                        >
-                                                            <div className="flex items-center justify-center gap-1.5">
-                                                                <img src="/images/gmsh.png" alt="G" className="w-3.5 h-3.5 object-contain opacity-80" />
+                                                        {formData.mesh_type === 'imported' ? (
+                                                            <div className="flex-1 px-3 py-2 rounded-lg text-xs font-medium border-2 border-blue-400 bg-blue-50 text-blue-800 shadow-sm flex items-center justify-center gap-2">
+                                                                <Grid3x3 className="w-4 h-4 text-blue-600" />
                                                                 <div className="text-left flex flex-col justify-center">
-                                                                    <div className="font-semibold leading-none mb-0.5 text-[11px]">GMSH</div>
-                                                                    <div className="text-[9px] opacity-70 leading-none">Opt</div>
+                                                                    <div className="font-semibold leading-none mb-0.5 text-[11px]">IMPORTED</div>
+                                                                    <div className="text-[9px] opacity-70 leading-none text-blue-600">Fixed Mesh (.msh / .xml)</div>
                                                                 </div>
                                                             </div>
-                                                        </button>
-                                                        <button type="button"
-                                                            onClick={() => handleInputChange({ target: { name: 'mesh_type', value: 'mshr' } })}
-                                                            className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all cursor-pointer
-                                                            ${formData.mesh_type === 'mshr'
-                                                                    ? 'border-orange-400 bg-orange-50 text-orange-800 shadow-sm'
-                                                                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}
-                                                        >
-                                                            <div className="flex items-center justify-center gap-1.5">
-                                                                <img src="/images/mshr.png" alt="M" className="w-3.5 h-3.5 object-contain opacity-80" />
-                                                                <div className="text-left flex flex-col justify-center">
-                                                                    <div className="font-semibold leading-none mb-0.5 text-[11px]">MSHR</div>
-                                                                    <div className="text-[9px] opacity-70 leading-none text-orange-600">Old</div>
-                                                                </div>
-                                                            </div>
-                                                        </button>
+                                                        ) : (
+                                                            <>
+                                                                <button type="button"
+                                                                    onClick={() => handleInputChange({ target: { name: 'mesh_type', value: 'gmsh' } })}
+                                                                    className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all cursor-pointer
+                                                                    ${formData.mesh_type === 'gmsh'
+                                                                            ? 'border-blue-400 bg-blue-50 text-blue-800 shadow-sm'
+                                                                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}
+                                                                >
+                                                                    <div className="flex items-center justify-center gap-1.5">
+                                                                        <img src="/images/gmsh.png" alt="G" className="w-3.5 h-3.5 object-contain opacity-80" />
+                                                                        <div className="text-left flex flex-col justify-center">
+                                                                            <div className="font-semibold leading-none mb-0.5 text-[11px]">GMSH</div>
+                                                                            <div className="text-[9px] opacity-70 leading-none">Opt</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </button>
+                                                                <button type="button"
+                                                                    onClick={() => handleInputChange({ target: { name: 'mesh_type', value: 'mshr' } })}
+                                                                    className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all cursor-pointer
+                                                                    ${formData.mesh_type === 'mshr'
+                                                                            ? 'border-orange-400 bg-orange-50 text-orange-800 shadow-sm'
+                                                                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}
+                                                                >
+                                                                    <div className="flex items-center justify-center gap-1.5">
+                                                                        <img src="/images/mshr.png" alt="M" className="w-3.5 h-3.5 object-contain opacity-80" />
+                                                                        <div className="text-left flex flex-col justify-center">
+                                                                            <div className="font-semibold leading-none mb-0.5 text-[11px]">MSHR</div>
+                                                                            <div className="text-[9px] opacity-70 leading-none text-orange-600">Old</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </button>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1575,38 +1587,50 @@ const SimulationModal = ({
                                                             Mesh Type <span className="ml-1 text-[10px] text-gray-400">(Generator)</span>
                                                         </label>
                                                         <div className="flex gap-2">
-                                                            <button type="button"
-                                                                disabled={!isEditMode || !canEditAllParams}
-                                                                onClick={() => isEditMode && canEditAllParams && handleInputChange({ target: { name: 'mesh_type', value: 'gmsh' } })}
-                                                                className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all ${!isEditMode || !canEditAllParams ? 'cursor-default' : 'cursor-pointer'}
-                                                            ${formData.mesh_type === 'gmsh'
-                                                                        ? 'border-gray-800 bg-gray-50 text-gray-800 shadow-sm'
-                                                                        : 'border-gray-200 bg-white text-gray-500'}`}
-                                                            >
-                                                                <div className="flex items-center justify-center gap-1.5">
-                                                                    <img src="/images/gmsh.png" alt="G" className="w-3.5 h-3.5 object-contain opacity-80" />
+                                                            {formData.mesh_type === 'imported' ? (
+                                                                <div className="flex-1 px-3 py-2 rounded-lg text-xs font-medium border-2 border-blue-400 bg-blue-50 text-blue-800 shadow-sm flex items-center justify-center gap-2">
+                                                                    <Grid3x3 className="w-4 h-4 text-blue-600" />
                                                                     <div className="text-left flex flex-col justify-center">
-                                                                        <div className="font-semibold leading-none mb-0.5 text-[11px]">GMSH</div>
-                                                                        <div className="text-[9px] opacity-70 leading-none">Opt</div>
+                                                                        <div className="font-semibold leading-none mb-0.5 text-[11px]">IMPORTED</div>
+                                                                        <div className="text-[9px] opacity-70 leading-none text-blue-600">Fixed Mesh (.msh / .xml)</div>
                                                                     </div>
                                                                 </div>
-                                                            </button>
-                                                            <button type="button"
-                                                                disabled={!isEditMode || !canEditAllParams}
-                                                                onClick={() => isEditMode && canEditAllParams && handleInputChange({ target: { name: 'mesh_type', value: 'mshr' } })}
-                                                                className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all ${!isEditMode || !canEditAllParams ? 'cursor-default' : 'cursor-pointer'}
-                                                            ${formData.mesh_type === 'mshr'
-                                                                        ? 'border-orange-400 bg-orange-50 text-orange-800 shadow-sm'
-                                                                        : 'border-gray-200 bg-white text-gray-500'}`}
-                                                            >
-                                                                <div className="flex items-center justify-center gap-1.5">
-                                                                    <img src="/images/mshr.png" alt="M" className="w-3.5 h-3.5 object-contain opacity-80" />
-                                                                    <div className="text-left flex flex-col justify-center">
-                                                                        <div className="font-semibold leading-none mb-0.5 text-[11px]">MSHR</div>
-                                                                        <div className="text-[9px] opacity-70 leading-none text-orange-600">Old</div>
-                                                                    </div>
-                                                                </div>
-                                                            </button>
+                                                            ) : (
+                                                                <>
+                                                                    <button type="button"
+                                                                        disabled={!isEditMode || !canEditAllParams}
+                                                                        onClick={() => isEditMode && canEditAllParams && handleInputChange({ target: { name: 'mesh_type', value: 'gmsh' } })}
+                                                                        className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all ${!isEditMode || !canEditAllParams ? 'cursor-default' : 'cursor-pointer'}
+                                                                    ${formData.mesh_type === 'gmsh'
+                                                                                ? 'border-gray-800 bg-gray-50 text-gray-800 shadow-sm'
+                                                                                : 'border-gray-200 bg-white text-gray-500'}`}
+                                                                    >
+                                                                        <div className="flex items-center justify-center gap-1.5">
+                                                                            <img src="/images/gmsh.png" alt="G" className="w-3.5 h-3.5 object-contain opacity-80" />
+                                                                            <div className="text-left flex flex-col justify-center">
+                                                                                <div className="font-semibold leading-none mb-0.5 text-[11px]">GMSH</div>
+                                                                                <div className="text-[9px] opacity-70 leading-none">Opt</div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        disabled={!isEditMode || !canEditAllParams}
+                                                                        onClick={() => isEditMode && canEditAllParams && handleInputChange({ target: { name: 'mesh_type', value: 'mshr' } })}
+                                                                        className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all ${!isEditMode || !canEditAllParams ? 'cursor-default' : 'cursor-pointer'}
+                                                                    ${formData.mesh_type === 'mshr'
+                                                                                ? 'border-orange-400 bg-orange-50 text-orange-800 shadow-sm'
+                                                                                : 'border-gray-200 bg-white text-gray-500'}`}
+                                                                    >
+                                                                        <div className="flex items-center justify-center gap-1.5">
+                                                                            <img src="/images/mshr.png" alt="M" className="w-3.5 h-3.5 object-contain opacity-80" />
+                                                                            <div className="text-left flex flex-col justify-center">
+                                                                                <div className="font-semibold leading-none mb-0.5 text-[11px]">MSHR</div>
+                                                                                <div className="text-[9px] opacity-70 leading-none text-orange-600">Old</div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

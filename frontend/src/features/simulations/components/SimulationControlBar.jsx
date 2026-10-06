@@ -4,7 +4,7 @@ import {
     CheckCircle2, ZapOff, Zap,
     Archive, ListFilter, X, Trash2, Search,
     ChevronLeft, ChevronRight,
-    SlidersHorizontal, Download, Plus, Upload, Clock, XCircle
+    SlidersHorizontal, Download, Plus, Upload, Clock, XCircle, Grid3x3
 } from 'lucide-react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
@@ -21,7 +21,7 @@ const SimulationControlBar = ({
     isRunningBatch = false,
     filteredCount = 0, currentPage = 1, totalPages = 1,
     onPrevPage, onNextPage,
-    onNewSimulation, onImport, onOpenQueue, isBatchCreating = false,
+    onNewSimulation, onImport, onImportMesh, onOpenQueue, isBatchCreating = false,
     activeSimulations = [], onGoToPage, onAbort, isAborting
 }) => {
     const counts = {
@@ -66,6 +66,11 @@ const SimulationControlBar = ({
                             <button onClick={onImport} disabled={isBatchCreating}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold border transition-all shadow-sm ${isBatchCreating ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
                                 <Upload className="w-3.5 h-3.5" /> Import
+                            </button>
+                            <button onClick={onImportMesh} disabled={isBatchCreating}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold border transition-all shadow-sm ${isBatchCreating ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                                title="Importar archivo de malla (.msh o .xml) para simular con geometría fija">
+                                <Grid3x3 className="w-3.5 h-3.5 text-blue-600" /> Import Mesh
                             </button>
                             <div style={{ overflow: 'hidden', transition: 'width 0.3s, opacity 0.3s', width: counts.queued > 0 ? 'auto' : '0px', opacity: counts.queued > 0 ? 1 : 0 }}>
                                 {counts.queued > 0 && (

@@ -697,6 +697,13 @@ def generate_mesh_and_save(app, sim_id, skin_thickness=1.3):
             skin_layer_config = row_dict.get('skin_layer_config', 'none')
             use_multilayer = skin_layer_config != 'none'
             mesh_type = row_dict.get('mesh_type', 'gmsh')
+
+            if mesh_type == 'imported':
+                xml_file = row_dict.get('xml_file')
+                msh_file = row_dict.get('msh_file')
+                if xml_file and os.path.exists(xml_file):
+                    print(f"✅ [generate_mesh_and_save] Simulación {sim_id} usa malla fija importada: {xml_file}")
+                    return xml_file, msh_file
             
             if use_multilayer:
                 if mesh_type == 'mshr':
@@ -1269,13 +1276,22 @@ def update_simulation_service(id, request):
                 "message": "Cannot edit simulation while it is running or queued"
             }), 400
         
-        # Determinar qué se puede editar según el estado
-        # 'Not started', 'Error', 'Aborted', 'Finished' → edición completa + regeneración de mesh
-        FULL_EDIT_STATUSES = {'Not started', 'Error', 'Aborted', 'Finished'}
-        can_edit_all = current_status in FULL_EDIT_STATUSES
-        
         # Extraer nombre (siempre editable)
         sim_name = data.get('sim_name')
+        if not sim_name:
+            cur.execute("SELECT sim_name FROM simulation WHERE id = %s", (sim_id,))
+            _curr_name_row = cur.fetchone()
+            sim_name = _curr_name_row[0] if _curr_name_row else "Simulacion"
+
+        # Determinar qué se puede editar según el estado y el payload:
+        # Solo se permite edición completa de parámetros físicos si la simulación NO está finalizada
+        # ('Not started', 'Draft', 'Error', 'Aborted') Y además el cliente envió parámetros numéricos (n_transmitter).
+        # Si la simulación está 'Finished', o si el cliente solo envió el nombre, SOLO se actualiza el nombre
+        # para preservar intactos los resultados calculados (.mat, gráficos) y la malla.
+        can_edit_all = (
+            current_status in {'Not started', 'Draft', 'Error', 'Aborted'}
+            and data.get('n_transmitter') is not None
+        )
         
         if can_edit_all:
             # Simulaciones "Not started": editar todos los parámetros
@@ -1324,32 +1340,57 @@ def update_simulation_service(id, request):
             # Calcular nueva longitud total
             plate_length = sensor_edge_margin * 2 + max(0, (n_transmitter - 1) * emitters_pitch) + sensor_distance + max(0, (n_receiver - 1) * receivers_pitch)
             
-            # Actualizar todos los parámetros y limpiar mesh
-            update_query = """
-                UPDATE simulation 
-                SET sim_name = %s,
-                    n_transmitter = %s,
-                    n_receiver = %s,
-                    emitters_pitch = %s,
-                    receivers_pitch = %s,
-                    sensor_distance = %s,
-                    sensor_edge_margin = %s,
-                    typical_mesh_size = %s,
-                    plate_thickness = %s,
-                    plate_length = %s,
-                    porosity = %s,
-                    attenuation = %s,
-                    mesh_type = %s,
-                    skin_layer_config = %s,
-                    skin_thickness_top = %s,
-                    skin_thickness_bottom = %s,
-                    mesh_angle = %s,
-                    mesh_angle_direction = %s,
-                    roughness = %s,
-                    xml_file = NULL,
-                    msh_file = NULL
-                WHERE id = %s
-            """
+            # Actualizar todos los parámetros (conservar mesh si es importada)
+            if mesh_type == 'imported':
+                update_query = """
+                    UPDATE simulation 
+                    SET sim_name = %s,
+                        n_transmitter = %s,
+                        n_receiver = %s,
+                        emitters_pitch = %s,
+                        receivers_pitch = %s,
+                        sensor_distance = %s,
+                        sensor_edge_margin = %s,
+                        typical_mesh_size = %s,
+                        plate_thickness = %s,
+                        plate_length = %s,
+                        porosity = %s,
+                        attenuation = %s,
+                        mesh_type = %s,
+                        skin_layer_config = %s,
+                        skin_thickness_top = %s,
+                        skin_thickness_bottom = %s,
+                        mesh_angle = %s,
+                        mesh_angle_direction = %s,
+                        roughness = %s
+                    WHERE id = %s
+                """
+            else:
+                update_query = """
+                    UPDATE simulation 
+                    SET sim_name = %s,
+                        n_transmitter = %s,
+                        n_receiver = %s,
+                        emitters_pitch = %s,
+                        receivers_pitch = %s,
+                        sensor_distance = %s,
+                        sensor_edge_margin = %s,
+                        typical_mesh_size = %s,
+                        plate_thickness = %s,
+                        plate_length = %s,
+                        porosity = %s,
+                        attenuation = %s,
+                        mesh_type = %s,
+                        skin_layer_config = %s,
+                        skin_thickness_top = %s,
+                        skin_thickness_bottom = %s,
+                        mesh_angle = %s,
+                        mesh_angle_direction = %s,
+                        roughness = %s,
+                        xml_file = NULL,
+                        msh_file = NULL
+                    WHERE id = %s
+                """
             
             cur.execute(update_query, (
                 sim_name, n_transmitter, n_receiver, emitters_pitch, receivers_pitch,
@@ -1610,6 +1651,194 @@ def duplicate_simulation_service(id, request):
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
+
+def import_mesh_simulation_service(request):
+    """
+    Import an existing .msh or .xml mesh file, create a new simulation record
+    with fixed mesh ('mesh_type'='imported'), and save the mesh files.
+    """
+    try:
+        if 'file' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No se subió ningún archivo de malla'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No se seleccionó ningún archivo'}), 400
+
+        filename = file.filename
+        ext = os.path.splitext(filename)[1].lower()
+        if ext not in ('.msh', '.xml'):
+            return jsonify({'status': 'error', 'message': 'Formato no soportado. Debe ser .msh o .xml'}), 400
+
+        form_data = request.form
+
+        raw_name = form_data.get('sim_name', '').strip()
+        sim_name = raw_name if raw_name else f"Sim_Malla_{os.path.splitext(filename)[0]}"
+        n_transmitter = int(form_data.get('n_transmitter', 5))
+        n_receiver = int(form_data.get('n_receiver', 24))
+        emitters_pitch = float(form_data.get('emitters_pitch', 1.0))
+        receivers_pitch = float(form_data.get('receivers_pitch', 0.4))
+        sensor_distance = float(form_data.get('sensor_distance', 20.0))
+        sensor_edge_margin = float(form_data.get('sensor_edge_margin', 10.0))
+        typical_mesh_size = float(form_data.get('typical_mesh_size', 0.1))
+        porosity = int(float(form_data.get('porosity', 10)))
+        attenuation = int(form_data.get('attenuation', 0))
+        roughness = float(form_data.get('roughness', 0.0))
+        mesh_angle = float(form_data.get('mesh_angle', 0.0))
+        mesh_angle_direction = str(form_data.get('mesh_angle_direction', 'none'))
+        if mesh_angle == 0:
+            mesh_angle_direction = 'none'
+        skin_layer_config = str(form_data.get('skin_layer_config', 'none'))
+        skin_thickness_top = float(form_data.get('skin_thickness_top', 1.3))
+        skin_thickness_bottom = float(form_data.get('skin_thickness_bottom', 1.3))
+
+        import tempfile
+        import shutil
+        import meshio
+        import numpy as np
+
+        temp_dir = tempfile.mkdtemp()
+        temp_input_path = os.path.join(temp_dir, filename)
+        file.save(temp_input_path)
+
+        temp_xml_path = os.path.join(temp_dir, "temp_mesh.xml")
+        temp_msh_path = os.path.join(temp_dir, "temp_mesh.msh")
+        mesh_obj = None
+
+        if ext == '.msh':
+            mesh_obj = meshio.read(temp_input_path)
+            # Limpiar nodos huérfanos si es triangular
+            if 'triangle' in mesh_obj.cells_dict:
+                triangles = mesh_obj.cells_dict['triangle']
+                all_points = mesh_obj.points
+                if all_points.shape[1] == 3:
+                    all_points = all_points[:, :2]
+                used_indices = np.unique(triangles.flatten())
+                index_map = np.full(all_points.shape[0], -1, dtype=np.intp)
+                index_map[used_indices] = np.arange(len(used_indices), dtype=np.intp)
+                filtered_points = all_points[used_indices]
+                remapped_triangles = index_map[triangles]
+                mesh_obj.points = filtered_points
+                mesh_obj.cells = [meshio.CellBlock("triangle", remapped_triangles)]
+            elif mesh_obj.points.shape[1] == 3:
+                mesh_obj.points = mesh_obj.points[:, :2]
+
+            meshio.write(temp_xml_path, mesh_obj, file_format="dolfin-xml")
+            shutil.copy2(temp_input_path, temp_msh_path)
+
+        elif ext == '.xml':
+            shutil.copy2(temp_input_path, temp_xml_path)
+            try:
+                mesh_obj = meshio.read(temp_input_path)
+                meshio.write(temp_msh_path, mesh_obj, file_format="gmsh22")
+            except Exception as e:
+                print(f"Aviso: no se pudo convertir XML a MSH para visor 3D: {e}")
+                mesh_obj = None
+
+        # Calcular dimensiones desde coordenadas de los nodos
+        try:
+            if mesh_obj is not None and hasattr(mesh_obj, 'points') and len(mesh_obj.points) > 0:
+                pts = mesh_obj.points
+                x_span = float(np.ptp(pts[:, 0]))
+                y_span = float(np.ptp(pts[:, 1]))
+                plate_length = round(x_span, 3)
+                plate_thickness = round(y_span, 3)
+            else:
+                plate_length = sensor_edge_margin * 2 + max(0, (n_transmitter - 1) * emitters_pitch) + sensor_distance + max(0, (n_receiver - 1) * receivers_pitch)
+                plate_thickness = float(form_data.get('plate_thickness', 4.0))
+        except Exception:
+            plate_length = sensor_edge_margin * 2 + max(0, (n_transmitter - 1) * emitters_pitch) + sensor_distance + max(0, (n_receiver - 1) * receivers_pitch)
+            plate_thickness = float(form_data.get('plate_thickness', 4.0))
+
+        if form_data.get('plate_length') and float(form_data.get('plate_length')) > 0:
+            plate_length = float(form_data.get('plate_length'))
+        if form_data.get('plate_thickness') and float(form_data.get('plate_thickness')) > 0:
+            plate_thickness = float(form_data.get('plate_thickness'))
+
+        sim_data = {
+            'sim_name': sim_name,
+            'n_transmitter': n_transmitter,
+            'n_receiver': n_receiver,
+            'emitters_pitch': emitters_pitch,
+            'receivers_pitch': receivers_pitch,
+            'sensor_distance': sensor_distance,
+            'sensor_edge_margin': sensor_edge_margin,
+            'typical_mesh_size': typical_mesh_size,
+            'plate_thickness': plate_thickness,
+            'plate_length': plate_length,
+            'porosity': porosity,
+            'attenuation': attenuation,
+            'p_status': "Not started",
+            'mesh_type': 'imported',
+            'skin_layer_config': skin_layer_config,
+            'skin_thickness_top': skin_thickness_top,
+            'skin_thickness_bottom': skin_thickness_bottom,
+            'mesh_angle': mesh_angle,
+            'mesh_angle_direction': mesh_angle_direction,
+            'roughness': roughness,
+            'xml_file': None,
+            'msh_file': None
+        }
+
+        doc = insert_simulation(current_app.mysql, sim_data)
+        sim_id = doc[0]
+
+        # Guardar archivos finales en simulation_results/sim_<id>/mesh/
+        sim_mesh_dir = get_mesh_dir(sim_id)
+        final_xml_path = os.path.abspath(os.path.join(sim_mesh_dir, f"mesh_{sim_id}.xml"))
+        final_msh_path = os.path.abspath(os.path.join(sim_mesh_dir, f"mesh_{sim_id}.msh"))
+
+        shutil.copy2(temp_xml_path, final_xml_path)
+        if os.path.exists(temp_msh_path):
+            shutil.copy2(temp_msh_path, final_msh_path)
+            saved_msh = final_msh_path
+        else:
+            saved_msh = None
+
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+        cur = current_app.mysql.connection.cursor()
+        cur.execute("""
+            UPDATE simulation 
+            SET xml_file = %s, msh_file = %s 
+            WHERE id = %s
+        """, (final_xml_path, saved_msh, sim_id))
+        current_app.mysql.connection.commit()
+
+        cur.execute("SELECT * FROM simulation WHERE id = %s", (sim_id,))
+        columns = [col[0] for col in cur.description]
+        row = cur.fetchone()
+        cur.close()
+
+        from decimal import Decimal
+        from datetime import datetime, date, timedelta
+        row_dict = dict(zip(columns, row))
+        for key, value in row_dict.items():
+            if isinstance(value, Decimal):
+                row_dict[key] = float(value)
+            elif isinstance(value, (datetime, date)):
+                row_dict[key] = value.isoformat() if value else None
+            elif isinstance(value, timedelta):
+                row_dict[key] = value.total_seconds() if value else None
+            elif isinstance(value, bytes):
+                row_dict[key] = None
+
+        current_app.socketio.emit('nueva_simulacion', row_dict)
+        notificar_estado_simulacion(sim_id, "Not started")
+        print(f"✅ Malla importada para simulación {sim_id}: {final_xml_path}")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Malla importada correctamente para simulación {sim_id}',
+            'simulation': row_dict
+        }), 201
+
+    except Exception as e:
+        import traceback
+        print(f"❌ Error en import_mesh_simulation_service: {e}")
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 def load_data_service():
     cur = current_app.mysql.connection.cursor()
@@ -2438,8 +2667,8 @@ def ValidData(n_transmitter, n_receiver, emitters_pitch, recivers_pitch, sensor_
         return False, "porosity", f"invalid range: {porosity} (must be between 0 and 30)"
     elif(type(mesh_type) is not str):
         return False, "mesh_type", str(type(mesh_type))
-    elif(mesh_type not in ["gmsh", "mshr"]):
-        return False, "mesh_type", f"invalid value: {mesh_type} (must be 'gmsh' or 'mshr')"
+    elif(mesh_type not in ["gmsh", "mshr", "imported"]):
+        return False, "mesh_type", f"invalid value: {mesh_type} (must be 'gmsh', 'mshr', or 'imported')"
     elif(type(roughness) is not int and type(roughness) is not float):
         return False, "roughness", str(type(roughness))
     elif(roughness < 0):

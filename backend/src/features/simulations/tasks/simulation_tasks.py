@@ -96,6 +96,7 @@ def run_simulation_task(sim_id, simulation_params):
     with app.app_context():
         try:
             # ===== Pre-chequeos de malla (Generación bajo demanda si está pendiente) =====
+            mesh_type = simulation_params.get('mesh_type', 'gmsh')
             xml_file = simulation_params.get('xml_file')
             xml_exists = False
             if xml_file:
@@ -105,6 +106,8 @@ def run_simulation_task(sim_id, simulation_params):
                     xml_exists = True
 
             if not xml_exists:
+                if mesh_type == 'imported':
+                    raise FileNotFoundError(f"Archivo de malla XML no encontrado para simulación con malla fija {sim_id}: {xml_file}")
                 print(f"⚡ [Celery Worker] Malla no encontrada o pendiente para simulación {sim_id}. Generando con Gmsh...")
                 current_task.update_state(
                     state='PROGRESS',

@@ -76,6 +76,13 @@ def load_data():
 def input_data():
     return input_data_service(request)
 
+
+@simulations_bp.route('/simulations/import-mesh', methods=['POST'])
+def import_mesh():
+    """Import an existing mesh file (.msh or .xml) and create a simulation with it."""
+    from ..services.simulations_service import import_mesh_simulation_service
+    return import_mesh_simulation_service(request)
+
 # Route for deleting all simulations - must come BEFORE the <id> route
 @simulations_bp.route('/simulations/all', methods=['DELETE'])
 def delete_all_sims():

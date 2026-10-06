@@ -272,3 +272,34 @@ Se analizaron y optimizaron los dos casos de discretización de mayor interés p
 
 > **Nota de Fidelidad y Validez Científica:**  
 > Todas las formulaciones matemáticas (matrices elásticas ortotrópicas de Voigt $C_{ij}$, operadores hiperelásticos y viscoelásticos de relajación $	au$, integración por facetas y condiciones de Dirichlet) permanecen intactas en su formulación física. MUMPS opera con doble precisión IEEE-754 (`float64`), arrojando soluciones idénticas a nivel de precisión de máquina y libres de NaNs.
+
+
+---
+
+## 10. 🧱 Importación de Mallas Fijas (.msh / .xml) y Protocolo Científico de Validación Cruzada (Fase 3)
+
+### 10.1. Contexto y Exigencia Científica
+Para evaluar formalmente las optimizaciones de velocidad y demostrar ante la comisión de tesis que los resultados del nuevo simulador son físicamente idénticos a los del simulador antiguo (legacy), se requería correr ambos programas sobre **exactamente la misma malla geométrica**.
+Anteriormente, cada simulación generaba una malla nueva con variaciones estocásticas triangulares. Se implementó la arquitectura de **Importación de Malla Fija**, permitiendo exportar una malla calculada (`.msh` o `.xml`) e importarla en cualquier simulación para mantener fijas las coordenadas nodales y la posición exacta de los transductores.
+
+### 10.2. Arquitectura Implementada
+1. **Endpoint REST y Servicio de Ingesta (`POST /simulations/import-mesh`):**
+   * Admite mallas en formato Gmsh (`.msh`) y FEniCS Dolfin (`.xml`).
+   * Limpieza de nodos huérfanos de contorno en `meshio` para prevenir matrices singulares.
+   * Auto-extracción de las dimensiones físicas de la placa ($L \times H$) desde los límites extremos de los vértices nodales.
+   * Registro con `mesh_type = 'imported'`.
+2. **Renombrado Seguro de Simulaciones Finalizadas (`update_simulation_service`):**
+   * Soluciona el error `int() argument must be a string, a bytes-like object or a number, not 'NoneType'`.
+   * Permite renombrar simulaciones finalizadas (`Finished`) enviando solo `{sim_name: '...'}` sin alterar resultados ni re-ejecutar mallados.
+3. **Corrección Crítica en los Solvers FEniCS (`TimeSimTransIsoMatCij2D_test.py` y `SimFreqDomain2D.py`):**
+   * Se unificó la condición de carga a `if mesh_type in ('gmsh', 'imported'):` para que las simulaciones importadas no retrocedan a generar mallas sintéticas con `mshr`.
+
+### 10.3. Resultados Cuantitativos del Análisis Comparativo (Carpeta `fase3_analisis/`)
+Se ejecutó un protocolo formal de 3 etapas automatizado en el script `fase3_analisis/ejecutar_analisis_fase3.py`:
+1. **Análisis Interno (Nuevo):** Las 4 simulaciones (Base, Roughness, Angulo, Roughness-Angulo) compartieron idéntica cota nodal $y_{\text{sens}} = 2.981849\text{ mm}$ y $\text{RMSD} = 0.00000000$. Ver `fase3_analisis/1_analisis_interno_simulador_nuevo.png`.
+2. **Análisis Interno (Antiguo):** Las 4 simulaciones en el simulador antiguo corrieron sobre la misma malla importada $y_{\text{sens}} = 2.981849\text{ mm}$ con $\text{RMSD} = 0.00000000$. Ver `fase3_analisis/2_analisis_interno_simulador_antiguo.png`.
+3. **Análisis Externo Cruzado (Antiguo vs. Nuevo):**
+   * **RMSD:** $\mathbf{2.9289 \times 10^{-13}}$ (límite numérico de precisión de máquina de doble precisión IEEE-754).
+   * **Correlación de Pearson ($r$):** $\mathbf{1.00000000}$ (formas de onda y modos guiados de Lamb exactamente idénticos).
+   * **Aceleración (Speedup):** De **~2.0 horas (7,200 s)** a tan solo **75 - 118 segundos** (aceleración de **~75x a 95x veces más rápido**).
+   * Ver `fase3_analisis/3_analisis_externo_cruzado_antiguo_vs_nuevo.png` y el informe detallado en `fase3_analisis/REPORTE_COMPARATIVO_FASE3.md`.

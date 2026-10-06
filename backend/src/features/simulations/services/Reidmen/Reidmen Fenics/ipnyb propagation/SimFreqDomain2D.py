@@ -251,7 +251,7 @@ def fmain (n_transmitter, n_receiver, distance, emitter_pitch, receiver_pitch, s
         print("🔧 Generando mesh con mshr...")
         domain = Rectangle(Point(0., 0.), Point(zlim, ylim))
         mesh = generate_mesh(domain, size)
-    elif mesh_type == "gmsh":
+    elif mesh_type in ("gmsh", "imported"):
         print("🔧 Cargando mesh desde archivo XML (generado con gmsh)...")
         mesh = Mesh(xml_file)
         # ── Reparar mesh gmsh: inicializar topología y corregir orientación ──

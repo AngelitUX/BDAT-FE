@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Ellipsis, Eye, Trash2, Clock, AlertTriangle, Loader, Edit2, Download } from 'lucide-react';
+import { Ellipsis, Eye, Trash2, Clock, AlertTriangle, Loader, Edit2, Download, Grid3x3 } from 'lucide-react';
 import StatusWithTime from './components/StatusWithTime';
 import ContextMenu from './components/ContextMenu';
 
@@ -232,7 +232,12 @@ export default function Table({ simulations, onView, onDelete, onDuplicate, onEx
                 )}
               </div>
               <div className="px-2 py-2 flex justify-center text-xs">
-                {(sim.mesh_type === 'gmsh' || !sim.mesh_type) ? (
+                {sim.mesh_type === 'imported' ? (
+                  <span className="text-[10px] text-blue-700 font-semibold flex items-center gap-1 whitespace-nowrap bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200" title="Malla fija importada (.msh / .xml)">
+                    <Grid3x3 className="w-3 h-3 text-blue-600" />
+                    <span className="hidden xl:inline">imported</span>
+                  </span>
+                ) : (sim.mesh_type === 'gmsh' || !sim.mesh_type) ? (
                   <span className="text-[10px] text-gray-700 font-medium flex items-center gap-1 whitespace-nowrap" title="Gmsh">
                     <img src="/images/gmsh.png" alt="gmsh" className="w-3 h-3 object-contain" />
                     <span className="hidden xl:inline">gmsh</span>

@@ -29,7 +29,27 @@ class SimulationService {
       IMPORT_RUN: `${this.baseURL}/simulations/import/run`,
       IMPORT_CANCEL: `${this.baseURL}/simulations/import/cancel`,
       IMPORT_RESET: `${this.baseURL}/simulations/import/reset`,
+      IMPORT_MESH: `${this.baseURL}/simulations/import-mesh`,
     };
+  }
+
+  async importMesh(formData) {
+    try {
+      const response = await fetch(this.endpoints.IMPORT_MESH, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error al importar malla:', error);
+      throw error;
+    }
   }
 
   async importStart(total) {
