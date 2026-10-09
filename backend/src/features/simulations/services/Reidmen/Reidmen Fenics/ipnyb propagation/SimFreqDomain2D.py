@@ -730,7 +730,7 @@ def fmain (n_transmitter, n_receiver, distance, emitter_pitch, receiver_pitch, s
         freq, freq_0 = float(freqs[idx_i]), 1.35 # ~ 0.5 [MHz] ---------------------------------------------------------
         # Define general variance
         epsilon = (tau) * freq * 2 * pi
-        sig_freq = 0.6 # sig_time ~ 0.7 [Mhz] 
+        sig_freq = 0.7 # sig_time ~ 0.7 [Mhz] 
         exp_R = Source(freq=freq, freq_0=freq_0,
                     sig_freq=sig_freq, osc="cos",
                     degree=1)

@@ -13,7 +13,7 @@
 %   mesh_size:       Tamaño de malla típico (mm)
 %   margen:          Margen a bordes de sensores (mm)
 %   pR:              Pitch entre receptores (mm)
-%   threshold:       Umbral SVD en dB para filtrado de ruido (por defecto -10 dB según código del docente)
+%   threshold:       Umbral SVD en dB para filtrado de ruido (por defecto -30 dB según indicación del docente)
 % ============================================================
 
 function generate_plots_octave(mat_file_path, output_path, attenuation, por, plate_thickness, mesh_size, margen, pR, threshold)
@@ -23,7 +23,7 @@ function generate_plots_octave(mat_file_path, output_path, attenuation, por, pla
     close all
     
     if nargin < 9 || isempty(threshold)
-        threshold = -10; % Umbral en dB por defecto según código original del docente para cubrir hasta ~1.8-1.9 MHz
+        threshold = -30; % Umbral en dB por defecto (-30 dB según indicación del docente)
     end
     
     fprintf('\n🎨 GENERADOR DE GRÁFICOS BDAT\n');
@@ -252,7 +252,7 @@ function generate_plots_octave(mat_file_path, output_path, attenuation, por, pla
     plot([0 2], [threshold threshold], 'r-', 'LineWidth', 2);
     
     % Escala ajustada con margen para ver claramente la línea roja
-    axis([0 2 min(-20, threshold - 5) 85])
+    axis([0 2 -60 40])
     xlabel('{\it f}  (MHz)', 'fontsize', let, 'fontname', 'times')
     ylabel('Singular values (dB)', 'fontsize', let, 'fontname', 'times')
     if n_sources > 1

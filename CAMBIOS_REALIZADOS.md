@@ -332,3 +332,14 @@ El docente solicitó dos correcciones fundamentales en la generación de gráfic
 * `backend/src/features/simulations/services/octave_plot_generator.py`
 * `backend/src/features/simulations/services/results_processor.py`
 * `CAMBIOS_REALIZADOS.md`
+
+### 11.3. Re-calibración según Retroalimentación Docente (Escala [-60, 40] dB, Umbral -30 dB y Sigma 0.7)
+Tras la revisión de los primeros resultados centrados, el docente solicitó las siguientes mejoras visuales y espectrales:
+1. **Re-escalado Vertical de Valores Singulares (xis([0 2 -60 40])):**
+   * Anteriormente el eje vertical iba de -20 a +85 dB, dejando un espacio vacío superior de ~50 dB dado que el pico de los modos alcanza ~32 dB.
+   * Se ajustó el rango a [-60, 40] dB, permitiendo que las curvas llenen armoniosamente la parte superior de la gráfica y revelen la estructura fina de modos en la región profunda hasta -60 dB.
+2. **Umbral Ajustado a -30 dB:**
+   * Se calibró el umbral en 	hreshold = -30.0 dB, ubicando la línea roja horizontal en el tercio inferior del nuevo rango.
+   * Este umbral permite incorporar mayor aporte de energía en los modos de orden superior, eliminando la apariencia tenue/desvanecida del espectro de ondas guiadas sin incorporar el piso de ruido extremo.
+3. **Ajuste del Ancho Espectral (sig_freq = 0.7):**
+   * Se calibró el parámetro de dispersión espectral gaussiana a $\sigma = 0.7$ para proveer una inyección de energía más ancha y homogénea a lo largo del rango de interés (0.4 a 1.8 MHz).

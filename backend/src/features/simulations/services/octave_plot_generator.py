@@ -51,7 +51,7 @@ def generate_results_plots_octave(simulation_id, mat_file_path, simulation_param
         margin = simulation_params.get('sensor_edge_margin', 20)
         # El campo puede llamarse 'receivers_pitch' (BD) o 'receiver_pitch' (legacy)
         receiver_pitch = simulation_params.get('receivers_pitch') or simulation_params.get('receiver_pitch', 0.4)
-        threshold = simulation_params.get('threshold') if simulation_params.get('threshold') is not None else simulation_params.get('svd_threshold', -10.0)
+        threshold = simulation_params.get('threshold') if simulation_params.get('threshold') is not None else simulation_params.get('svd_threshold', -30.0)
         
         print(f"📋 Parámetros de simulación:")
         print(f"   Attenuation: {attenuation}")
