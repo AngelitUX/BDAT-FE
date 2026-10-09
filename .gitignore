@@ -119,6 +119,7 @@ simulation_results/
 # Preservar archivos .mat de referencia necesarios para el funcionamiento
 !**/REF2D_exvivo_Mathilde_Radius_01mm.mat
 !**/k_REF2D_Datapy.mat
+!**/C_values_mathilde.mat
 
 # ========================================
 # CYPRESS E2E TESTING
