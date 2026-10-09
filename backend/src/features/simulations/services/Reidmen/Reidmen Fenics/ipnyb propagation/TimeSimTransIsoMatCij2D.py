@@ -95,7 +95,8 @@ class Source(UserExpression):
         factor = 1/(2*pow(self.sig_time,2))
         dif_time = self.time - self.t_0
         # Obtaining left side and right sides
-        num = exp(-factor*pow(dif_time,2))*cos(2*pi*dif_time)
+        f0 = 1.35
+        num = exp(-factor*pow(dif_time,2))*cos(2*pi*dif_time*f0)
         # Define values for the vector
         values[0] = 0.0 # the horizontal direction
         values[1] = -num # vertical direction

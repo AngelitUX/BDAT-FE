@@ -51,6 +51,7 @@ def generate_results_plots_octave(simulation_id, mat_file_path, simulation_param
         margin = simulation_params.get('sensor_edge_margin', 20)
         # El campo puede llamarse 'receivers_pitch' (BD) o 'receiver_pitch' (legacy)
         receiver_pitch = simulation_params.get('receivers_pitch') or simulation_params.get('receiver_pitch', 0.4)
+        threshold = simulation_params.get('threshold') if simulation_params.get('threshold') is not None else simulation_params.get('svd_threshold', -10.0)
         
         print(f"📋 Parámetros de simulación:")
         print(f"   Attenuation: {attenuation}")
@@ -59,9 +60,11 @@ def generate_results_plots_octave(simulation_id, mat_file_path, simulation_param
         print(f"   Mesh size: {mesh_size} mm")
         print(f"   Margin: {margin} mm")
         print(f"   Receiver pitch: {receiver_pitch} mm")
+        print(f"   SVD Threshold: {threshold} dB")
         
         # Ruta al script de Octave
-        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_dir = os.path.dirname(os.path.abspath(__file__))\
+        
         octave_script = os.path.join(script_dir, 'generate_plots_octave.m')
         
         if not os.path.exists(octave_script):
@@ -71,7 +74,7 @@ def generate_results_plots_octave(simulation_id, mat_file_path, simulation_param
         print(f"📜 Script de Octave: {octave_script}")
         
         # Construir comando de Octave
-        # Formato: octave --no-gui --eval "generate_plots_octave('input.mat', 'output.png', att, por, thick, mesh, marg, pitch)"
+        # Formato: octave --no-gui --eval "generate_plots_octave('input.mat', 'output.png', att, por, thick, mesh, marg, pitch, threshold)"
         octave_cmd = (
             f"generate_plots_octave("
             f"'{mat_file_path}', "
@@ -81,7 +84,8 @@ def generate_results_plots_octave(simulation_id, mat_file_path, simulation_param
             f"{plate_thickness}, "
             f"{mesh_size}, "
             f"{margin}, "
-            f"{receiver_pitch}"
+            f"{receiver_pitch}, "
+            f"{threshold}"
             f")"
         )
         
@@ -190,7 +194,7 @@ def get_results_plot_base64(simulation_id):
         plot_path = get_plot_file_path(simulation_id)
         
         if not os.path.exists(plot_path):
-            print(f"⚠️ Gráfico no encontrado: {plot_path}")
+            print(f"⚠️  Gráfico no encontrado: {plot_path}")
             return None
         
         with open(plot_path, 'rb') as f:

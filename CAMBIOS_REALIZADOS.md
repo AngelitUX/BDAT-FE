@@ -131,8 +131,7 @@ Siguiendo tu instrucción, se implementaron de forma limpia, robusta y verificad
 
 ### 2. 🔁 Reutilización de la Factorización LU en el Bucle Temporal
 * **¿Qué problema había?:** En cada uno de los 1,024 pasos temporales, el código original volvía a ensamblar desde cero la matriz del sistema $A$ (`A = assemble(A_lhs)`) y resolvía el sistema lineal factorizándolo nuevamente de punta a punta. En una malla de 100,000 grados de libertad, cada factorización demoraba varios segundos. Repetido 1,024 veces por cada emisor, esto sumaba **más de 7 horas de cálculo repetitivo innecesario**.
-* **¿Qué se hizo?:** Como las propiedades del material (matriz $C_{ij}$, densidad $
-ho$, amortiguamiento de capa esponja y paso de tiempo $\Delta t$) son fijas y no cambian en el tiempo, la matriz $A$ es **completamente constante**.
+* **¿Qué se hizo?:** Como las propiedades del material (matriz $C_{ij}$, densidad $\rho$, amortiguamiento de capa esponja y paso de tiempo $\Delta t$) son fijas y no cambian en el tiempo, la matriz $A$ es **completamente constante**.
   * Ahora $A$ se ensambla **una sola vez** al inicio.
   * Se le aplican las condiciones de borde Dirichlet una sola vez.
   * Se factoriza mediante descomposición LU persistente (`solver = LUSolver(A)`).
@@ -149,7 +148,7 @@ ho$, amortiguamiento de capa esponja y paso de tiempo $\Delta t$) son fijas y no
 ### 4. 🎯 Pre-cálculo Espacial de la Fuente (Separación Espacio-Tiempo $x, t$) y Operadores Newmark
 * **¿Qué problema había?:** En cada paso de tiempo, el código ejecutaba `source = interpolate(source_exp, V)` recorriendo toda la malla de 100,000 nodos para evaluar una función analítica que en el espacio solo actúa en una pequeña ventana del borde superior. Además, ensamblaba la forma variacional del lado derecho (`b_block`) en cada iteración mediante integración numérica de elementos finitos.
 * **¿Qué se hizo?:** 
-  * **Separación analítica:** La excitación acústica es $\mathbf{f}(x,t) = s(t) \cdot (0, -1)$. Se pre-ensambló el vector de carga espacial $B_{	ext{espacial}}$ para cada emisor una sola vez antes de iniciar la simulación. En el bucle temporal, únicamente se evalúa la función escalar en tiempo $s(t)$ y se suma escalada mediante una suma vectorial ultrarrápida (`b.axpy(s_t, B_spatial)`).
+  * **Separación analítica:** La excitación acústica es $\mathbf{f}(x,t) = s(t) \cdot (0, -1)$. Se pre-ensambló el vector de carga espacial $B_{\text{espacial}}$ para cada emisor una sola vez antes de iniciar la simulación. En el bucle temporal, únicamente se evalúa la función escalar en tiempo $s(t)$ y se suma escalada mediante una suma vectorial ultrarrápida (`b.axpy(s_t, B_spatial)`).
   * **Operadores Newmark pre-ensamblados:** Las matrices de masa y amortiguamiento que multiplican a los campos previos ($u_n, v_n, a_n$) se pre-ensamblaron una sola vez ($M_u, M_v, M_a$). En cada paso temporal, el vector $b$ se construye mediante multiplicaciones dispersas matriz-vector en memoria, eliminando por completo la integración por elementos de FEniCS en el bucle interior.
   * **Puntos de sensores pre-instanciados:** Se pre-crearon los puntos de receptores en memoria, evitando instanciar más de 120,000 objetos temporales de coordenadas durante la simulación.
 
@@ -158,7 +157,7 @@ ho$, amortiguamiento de capa esponja y paso de tiempo $\Delta t$) son fijas y no
 ## 🧪 Pruebas y Verificación de Funcionamiento
 
 Para asegurar que todo quedara perfecto y sin errores antes de entregarlo:
-1. **Prueba de equivalencia matemática:** Se comparó paso a paso la solución del método original contra el método optimizado. La diferencia absoluta máxima fue de **$2.89 	imes 10^{-14}$** (es decir, idéntica hasta el decimocuarto decimal, nivel de precisión de máquina).
+1. **Prueba de equivalencia matemática:** Se comparó paso a paso la solución del método original contra el método optimizado. La diferencia absoluta máxima fue de **$2.89 \times 10^{-14}$** (es decir, idéntica hasta el decimocuarto decimal, nivel de precisión de máquina).
 2. **Prueba End-to-End en el Contenedor Celery:** Se ejecutó un experimento completo de propagación acústica llamando a `TimeSimTransIsoMatCij2D_test.fmain` con emisores y receptores activos:
    * Inicialización, diagnósticos de matriz y pre-cálculos: completados en **2.81 segundos**.
    * Bucle temporal completo (2,048 pasos temporales): completado en **3.62 segundos**.
@@ -169,7 +168,6 @@ Para asegurar que todo quedara perfecto y sin errores antes de entregarlo:
 * `docker-compose.dev.yml` (desbloqueo de hilos OpenMP / BLAS).
 * `backend/src/features/simulations/services/Reidmen/Reidmen Fenics/ipnyb propagation/TimeSimTransIsoMatCij2D_test.py` (pre-factorización LU, pre-ensamblado de operadores Newmark, fuentes vectorizadas y reutilización entre emisores).
 * `backend/src/features/simulations/services/Reidmen/Reidmen Fenics/ipnyb propagation/sandwich.py` (mismo esquema de pre-factorización y ensamblado acelerado para multicapa).
-
 
 ---
 
@@ -219,7 +217,6 @@ Para asegurar que todo quedara perfecto y sin errores antes de entregarlo:
   * `./frontend:/app`
 * **Conclusión:** No se requiere reconstruir imágenes de Docker (`docker compose build`). Con simplemente arrancar o reiniciar los contenedores (`docker compose up` o `docker compose start`), todos los cambios entran en vigencia de inmediato.
 
-
 ---
 
 ## 7. ⚡ Fase 6: Solución de Sincronización Visual en Tiempo Real, Ejecución Masiva ("Run All") y Aceleración Extrema de Simulaciones con Atenuación (Dominio Frecuencial)
@@ -252,7 +249,7 @@ Para asegurar que todo quedara perfecto y sin errores antes de entregarlo:
 * **Solución implementada:**
   1. **Factorización directa LU con MUMPS:** Se reemplazó el solver iterativo por factorización directa LU utilizando la biblioteca científica MUMPS (Multifrontal Massively Parallel Sparse direct Solver).
   2. **Reutilización de factorización LU entre fuentes:** La matriz de rigidez y masa compleja del medio viscoelástico $A(\omega)$ depende **exclusivamente de la frecuencia $\omega$** y las condiciones de contorno de Dirichlet, siendo independiente de la posición de cada fuente. Ahora, la matriz $A$ se ensambla y factoriza **una única vez por frecuencia** (~18.5 segundos en malla de 0.05 mm, ~3.5 segundos en malla de 0.10 mm). Para cada una de las 5 fuentes acústicas, el solver ejecuta únicamente una sustitución directa (*back-substitution*), resolviendo cada fuente en tan solo **55 milisegundos**.
-  3. **Progreso fluido en tiempo real:** Se conectó la emisión del progreso de la simulación a cada paso individual de fuente ($idx_i 	imes nsous + sous_j$), permitiendo que la barra de progreso web avance suavemente de 0% a 100%.
+  3. **Progreso fluido en tiempo real:** Se conectó la emisión del progreso de la simulación a cada paso individual de fuente ($idx_i \times nsous + sous_j$), permitiendo que la barra de progreso web avance suavemente de 0% a 100%.
   4. **Mecanismo de respaldo redundante:** Se preservó un mecanismo de conmutación por excepción que conmuta a solvers iterativos en caso de presentarse alguna singularidad geométrica imprevista.
 
 ---
@@ -271,8 +268,7 @@ Se analizaron y optimizaron los dos casos de discretización de mayor interés p
 | **0.05 mm** | **Con Atenuación** (Frecuencial, 205 frecs) | ~256,952 complejos | ~170 horas (~7 días) | **~1 hora 11 minutos** *(medido en Sim 68)* | **~145x** |
 
 > **Nota de Fidelidad y Validez Científica:**  
-> Todas las formulaciones matemáticas (matrices elásticas ortotrópicas de Voigt $C_{ij}$, operadores hiperelásticos y viscoelásticos de relajación $	au$, integración por facetas y condiciones de Dirichlet) permanecen intactas en su formulación física. MUMPS opera con doble precisión IEEE-754 (`float64`), arrojando soluciones idénticas a nivel de precisión de máquina y libres de NaNs.
-
+> Todas las formulaciones matemáticas (matrices elásticas ortotrópicas de Voigt $C_{ij}$, operadores hiperelásticos y viscoelásticos de relajación $\tau$, integración por facetas y condiciones de Dirichlet) permanecen intactas en su formulación física. MUMPS opera con doble precisión IEEE-754 (`float64`), arrojando soluciones idénticas a nivel de precisión de máquina y libres de NaNs.
 
 ---
 
@@ -303,3 +299,36 @@ Se ejecutó un protocolo formal de 3 etapas automatizado en el script `fase3_ana
    * **Correlación de Pearson ($r$):** $\mathbf{1.00000000}$ (formas de onda y modos guiados de Lamb exactamente idénticos).
    * **Aceleración (Speedup):** De **~2.0 horas (7,200 s)** a tan solo **75 - 118 segundos** (aceleración de **~75x a 95x veces más rápido**).
    * Ver `fase3_analisis/3_analisis_externo_cruzado_antiguo_vs_nuevo.png` y el informe detallado en `fase3_analisis/REPORTE_COMPARATIVO_FASE3.md`.
+
+---
+
+## 11. 🎯 Centrado Espectral de Excitación y Filtrado por Umbral SVD (Threshold) en Post-Procesamiento
+
+### 11.1. Contexto y Requerimiento Académico
+El docente solicitó dos correcciones fundamentales en la generación de gráficos de resultados (los 3 paneles: señales espacio-temporales, valores singulares y espectro guiado $f-k$):
+1. **Centrado horizontal del gráfico central (`singular values (dB)`):** Anteriormente, el pico de los valores singulares se ubicaba desplazado hacia la izquierda (~0.5 a 0.7 MHz), fuera del centro de la ventana horizontal de $[0, 2.0]\text{ MHz}$. Se requería centrar la energía de las ondas horizontalmente en el eje.
+2. **Eliminación de ruido espurio en el espectro guiado mediante umbral (`threshold`):** En la descomposición SVD por frecuencia, los valores singulares inferiores correspondientes a ruido numérico generaban marcas y señales falsas de alta energía dispersa en el tercer gráfico (`guided wave spectrum image`). Se requería filtrar dichos modos inferiores mediante un umbral calibrado en dB que no recorte las curvas de dispersión y marcar este umbral claramente con una línea horizontal roja en el gráfico central.
+
+### 11.2. Soluciones e Implementación Técnica
+1. **Centrado Espectral en Solvers FEniCS (`f0 = 1.35 MHz`):**
+   * **Dominio Temporal (`TimeSimTransIsoMatCij2D_test.py`, `sandwich.py`, solvers temporales):** Se ajustó la frecuencia de modulación a $f_0 = 1.35\text{ MHz}$ (siguiendo la indicación docente de $f_0 > 1$, $1.2$ o $1.5\text{ MHz}$) para compensar la atenuación y filtrado mecánico natural de la placa ósea, logrando que el pico de valores singulares recibido en los sensores se desplace hacia la derecha y quede centrado en $\sim 1.0\text{ MHz}$ en el eje horizontal $[0, 2.0]\text{ MHz}$:
+     $$\text{value}(t) = \exp\left(-\frac{(t - t_0)^2}{2\sigma_t^2}\right) \cdot \cos(2\pi \cdot f_0 \cdot (t - t_0))$$
+   * **Dominio Frecuencial (`SimFreqDomain2D.py`):** Se fijó la frecuencia central en `freq_0 = 1.35 MHz`.
+2. **Filtrado SVD Calibrado en GNU Octave (`generate_plots_octave.m`):**
+   * Se configuró el umbral por defecto en $\mathbf{-10.0\text{ dB}}$ (valor original del código del docente en la Captura 5), tras verificar que un umbral de $+30\text{ dB}$ acotaba el espectro prematuramente en $\sim 1.15\text{ MHz}$.
+   * Con $\text{threshold} = -10.0\text{ dB}$, el rango de frecuencias se extiende hasta $\mathbf{1.934\text{ MHz}}$, cubriendo la totalidad de las líneas guía blancas de referencia (hasta $1.8\text{ MHz}$) y filtrando únicamente los modos inferiores con energía espuria.
+   * En el bucle de frecuencia, se calcula el vector de índices que superan el umbral:
+     $$\text{ind} = \text{find}\left(20 \log_{10}(\text{diag}(S_2)) > \text{threshold}\right)$$
+   * Únicamente las columnas de la matriz proyectada $A$ asociadas a dichos modos se acumulan en la densidad espectral $f-k$:
+     $$\text{Normfk}(:, n_f) = \frac{1}{NR - NE} \sum |A(:, \text{ind})|^2$$
+3. **Línea de Umbral Roja en el Gráfico Central:**
+   * En el subplot 2, se traza la línea horizontal roja con `plot([0 2], [threshold, threshold], 'r-', 'LineWidth', 2);` con escala ajustada `axis([0 2 min(-20, threshold - 5) 85])` para que la línea en $-10\text{ dB}$ quede claramente visible y despegada del borde inferior.
+
+### Archivos Modificados:
+* `backend/src/features/simulations/services/Reidmen/Reidmen Fenics/ipnyb propagation/TimeSimTransIsoMatCij2D_test.py`
+* `backend/src/features/simulations/services/Reidmen/Reidmen Fenics/ipnyb propagation/SimFreqDomain2D.py`
+* `backend/src/features/simulations/services/Reidmen/Reidmen Fenics/ipnyb propagation/sandwich.py`
+* `backend/src/features/simulations/services/generate_plots_octave.m`
+* `backend/src/features/simulations/services/octave_plot_generator.py`
+* `backend/src/features/simulations/services/results_processor.py`
+* `CAMBIOS_REALIZADOS.md`

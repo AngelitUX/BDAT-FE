@@ -23,7 +23,7 @@ def process_simulation_results(simulation_id, simulation_data):
         
         # Si no existe, intentar generarla on-demand
         if not image_base64:
-            print(f"⚠️ Gráfico no encontrado, intentando generar on-demand...")
+            print(f"⚠️    Gráfico no encontrado, intentando generar on-demand...")
             
             # Buscar archivo .mat
             mat_path = None
@@ -49,7 +49,9 @@ def process_simulation_results(simulation_id, simulation_data):
                     'typical_mesh_size': simulation_data.get('typical_mesh_size', 0.1),
                     'sensor_edge_margin': simulation_data.get('sensor_edge_margin', 20),
                     'porosity': simulation_data.get('porosity', 10),
-                    'receiver_pitch': simulation_data.get('receiver_pitch', 0.4)
+                    'plate_thickness': simulation_data.get('plate_thickness', 2.0),
+                    'receiver_pitch': simulation_data.get('receivers_pitch') or simulation_data.get('receiver_pitch', 0.4),
+                    'threshold': simulation_data.get('threshold') if simulation_data.get('threshold') is not None else simulation_data.get('svd_threshold', -10.0)
                 }
                 
                 print(f"🎨 Generando gráfico on-demand con parámetros: {simulation_params}")

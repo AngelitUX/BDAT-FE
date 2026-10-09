@@ -334,7 +334,7 @@ def fmain(n_transmitter, n_receiver, distance, emitter_pitch, receiver_pitch,
         def eval(self, values, x):
             factor = 1/(2*pow(self.sig_time,2))
             dif_time = self.time - self.t_0
-            f0 = 1  # Frecuencia [MHz]
+            f0 = 1.35  # [MHz]
             num = exp(-factor*pow(dif_time,2))*cos(2*pi*dif_time*f0)
             
             values[0] = 0.0   # Dirección horizontal (Z)
@@ -390,7 +390,7 @@ def fmain(n_transmitter, n_receiver, distance, emitter_pitch, receiver_pitch,
     B_spatial_list = [assemble(dot(Constant((0.0, -1.0)), w)*ds(int(21 + s))) for s in range(nsous)]
     t_0 = 5.0
     sig_time = 0.7
-    f0 = 1.0
+    f0 = 1.35  # [MHz]
     factor_gauss = 1.0 / (2.0 * (sig_time**2))
     dif_times = times - t_0
     source_temporal = np.exp(-factor_gauss * (dif_times**2)) * np.cos(2.0 * np.pi * dif_times * f0)

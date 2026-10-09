@@ -2,24 +2,29 @@
 %  GENERADOR DE GRÁFICOS PARA SIMULACIONES BDAT
 %  GNU Octave
 % ============================================================
-% USO: octave --no-gui generate_plots_octave.m input.mat output.png attenuation porosity thickness mesh_size margin pitch
+% USO: octave --no-gui generate_plots_octave.m input.mat output.png attenuation porosity thickness mesh_size margin pitch [threshold]
 %
-% ARGUMENTOS (por línea de comandos):
-%   arg_list{1}: Ruta al archivo .mat con resultados
-%   arg_list{2}: Ruta de salida para PNG
-%   arg_list{3}: attenuation (0 o 1)
-%   arg_list{4}: porosity (1-30)
-%   arg_list{5}: plate_thickness (mm)
-%   arg_list{6}: typical_mesh_size (mm)
-%   arg_list{7}: sensor_edge_margin (mm)
-%   arg_list{8}: receiver_pitch (mm)
+% ARGUMENTOS:
+%   mat_file_path:   Ruta al archivo .mat con resultados
+%   output_path:     Ruta de salida para PNG
+%   attenuation:     0 (tiempo) o 1 (frecuencia)
+%   por:             Porosidad (1-30)
+%   plate_thickness: Espesor de la placa (mm)
+%   mesh_size:       Tamaño de malla típico (mm)
+%   margen:          Margen a bordes de sensores (mm)
+%   pR:              Pitch entre receptores (mm)
+%   threshold:       Umbral SVD en dB para filtrado de ruido (por defecto -10 dB según código del docente)
 % ============================================================
 
-function generate_plots_octave(mat_file_path, output_path, attenuation, por, plate_thickness, mesh_size, margen, pR)
+function generate_plots_octave(mat_file_path, output_path, attenuation, por, plate_thickness, mesh_size, margen, pR, threshold)
     %% ============================================================
     %  CONFIGURACIÓN INICIAL
     % ============================================================
     close all
+    
+    if nargin < 9 || isempty(threshold)
+        threshold = -10; % Umbral en dB por defecto según código original del docente para cubrir hasta ~1.8-1.9 MHz
+    end
     
     fprintf('\n🎨 GENERADOR DE GRÁFICOS BDAT\n');
     fprintf('═══════════════════════════════════════════════════════════\n');
@@ -48,6 +53,7 @@ function generate_plots_octave(mat_file_path, output_path, attenuation, por, pla
     fprintf('   Espesor: %.1f mm\n', plate_thickness);
     fprintf('   Tamaño malla: %.2f mm\n', mesh_size);
     fprintf('   Pitch receptores: %.2f mm\n', pR);
+    fprintf('   Umbral SVD (Threshold): %.1f dB\n', threshold);
     
     %% ------------------------------
     % CARGA DE DATOS
@@ -174,12 +180,16 @@ function generate_plots_octave(mat_file_path, output_path, attenuation, por, pla
             [U, S2, ~] = svd(slice, 0);
             A_mat = Nk * ifft(U, Nk, 1);
             
-            n_modes = min(4, size(A_mat, 2));
-            Normfk_total(:, nf) = Normfk_total(:, nf) + (1/(NR-NE)) * sum(abs(A_mat(:, 1:n_modes)).^2, 2);
-            
             s_vals = diag(S2);
             s_len = min(NE, length(s_vals));
             valsing_total(nf, 1:s_len) = valsing_total(nf, 1:s_len) + reshape(s_vals(1:s_len), 1, []);
+            
+            % Filtrado por umbral (Threshold en dB) según instrucciones del docente:
+            % Solo se suman al espectro guided wave los modos cuyos valores singulares superan el umbral
+            ind = find(20 * log10(s_vals + 1e-10) > threshold);
+            if ~isempty(ind)
+                Normfk_total(:, nf) = Normfk_total(:, nf) + (1/(NR-NE)) * sum(abs(A_mat(:, ind)).^2, 2);
+            end
         end
     end
     
@@ -193,7 +203,7 @@ function generate_plots_octave(mat_file_path, output_path, attenuation, por, pla
         Normfk = Normfk / max_norm;
     end
     
-    fprintf('✅ Espectro compuesto multi-emisor calculado\n');
+    fprintf('✅ Espectro compuesto multi-emisor calculado (filtrado con threshold = %.1f dB)\n', threshold);
     fprintf('   Rango Normfk: [%.2e, %.2e]\n', min(Normfk(:)), max(Normfk(:)));
     
     %% ============================================================
@@ -237,7 +247,12 @@ function generate_plots_octave(mat_file_path, output_path, attenuation, por, pla
         plot(f(2:end), sv_db, 'LineWidth', 2); 
         hold on
     end
-    axis([0 2 -15 65])
+    
+    % Línea de umbral (Threshold) solicitada por el profesor en color rojo:
+    plot([0 2], [threshold threshold], 'r-', 'LineWidth', 2);
+    
+    % Escala ajustada con margen para ver claramente la línea roja
+    axis([0 2 min(-20, threshold - 5) 85])
     xlabel('{\it f}  (MHz)', 'fontsize', let, 'fontname', 'times')
     ylabel('Singular values (dB)', 'fontsize', let, 'fontname', 'times')
     if n_sources > 1
@@ -249,7 +264,7 @@ function generate_plots_octave(mat_file_path, output_path, attenuation, por, pla
     grid on
     set(gca, 'Position', [0.37 0.15 0.26 0.75])
     
-    fprintf('   ✓ Gráfico 2: Valores singulares\n');
+    fprintf('   ✓ Gráfico 2: Valores singulares con línea de umbral en %.1f dB\n', threshold);
     
     %% GRÁFICO 3: ESPECTRO GUIADO
     subplot(1,3,3)
@@ -409,7 +424,7 @@ function generate_plots_octave(mat_file_path, output_path, attenuation, por, pla
     
     axis([0 2 0 7])
     
-    fprintf('   ✓ Gráfico 3: Espectro guiado\n');
+    fprintf('   ✓ Gráfico 3: Espectro guiado (filtrado)\n');
     
     %% ============================================================
     %  GUARDAR IMAGEN

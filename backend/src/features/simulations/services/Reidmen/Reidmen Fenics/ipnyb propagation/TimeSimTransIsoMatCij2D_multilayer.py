@@ -280,7 +280,7 @@ def fmain_multilayer(n_transmitter, n_receiver, distance, emitter_pitch, receive
         def eval(self, values, x):
             factor = 1/(2*pow(self.sig_time,2))
             dif_time = self.time - self.t_0
-            f0 = 1
+            f0 = 1.35  # [MHz]
             num = exp(-factor*pow(dif_time,2))*cos(2*pi*dif_time*f0)
             values[0] = 0.0  # dirección horizontal
             values[1] = -num  # dirección vertical

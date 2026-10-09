@@ -298,7 +298,7 @@ def fmain (n_transmitter, n_receiver, distance, emitter_pitch, receiver_pitch, s
             factor = 1/(2*pow(self.sig_time,2))
             dif_time = self.time - self.t_0
             # Obtaining left side and right sides
-            f0=1
+            f0 = 1.35  # [MHz] Frecuencia central ajustada
             num = exp(-factor*pow(dif_time,2))*cos(2*pi*dif_time*f0)
             # Define values for the vector
             values[0] = 0.0 # the horizontal direction
@@ -727,7 +727,7 @@ def fmain (n_transmitter, n_receiver, distance, emitter_pitch, receiver_pitch, s
     # Pre-calcular serie temporal de excitación acústica
     t_0 = 5.0
     sig_time = 0.7
-    f0 = 1.0
+    f0 = 1.35  # [MHz] Frecuencia central ajustada
     factor_gauss = 1.0 / (2.0 * (sig_time**2))
     dif_times = times - t_0
     source_temporal = np.exp(-factor_gauss * (dif_times**2)) * np.cos(2.0 * np.pi * dif_times * f0)
